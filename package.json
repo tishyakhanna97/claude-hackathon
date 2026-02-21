@@ -1,0 +1,23 @@
+{
+  "name": "solopreneur-plugin",
+  "version": "1.0.0",
+  "description": "A Claude Code plugin that treats your solopreneur workflow as a virtual company. AI agents act as specialized employees, skills are standard operating procedures, agent teams run parallel meetings, and evals are performance reviews.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tishyakhanna97/claude-hackathon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tishyakhanna97/claude-hackathon/issues"
+  },
+  "homepage": "https://github.com/tishyakhanna97/claude-hackathon#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0"
+  }
+}

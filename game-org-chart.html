@@ -8,770 +8,796 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #0f172a; overflow: hidden; font-family: monospace; }
 canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
-
-/* Detail panel */
 #detail-panel {
   position: fixed; top: 0; right: 0; width: 420px; max-width: 92vw; height: 100vh;
   background: #0f172a; border-left: 2px solid #334155; z-index: 100;
   transform: translateX(100%); transition: transform 0.25s ease;
-  display: flex; flex-direction: column;
-  box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.6);
 }
 #detail-panel.open { transform: translateX(0); }
-#detail-scrim {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5); z-index: 99; display: none;
-}
+#detail-scrim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; display: none; }
 #detail-scrim.open { display: block; }
-.dp-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid #1e293b;
-}
+.dp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #1e293b; }
 .dp-header h2 { color: #e2e8f0; font-size: 1rem; margin: 0; font-family: monospace; }
-.dp-badge {
-  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
-  padding: 3px 8px; border-radius: 4px; margin-right: 10px; font-weight: 700;
-  font-family: monospace;
-}
-.dp-close {
-  background: none; border: none; color: #64748b; font-size: 1.4rem;
-  cursor: pointer; padding: 4px 8px; border-radius: 6px; font-family: monospace;
-}
+.dp-badge { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; margin-right: 10px; font-weight: 700; font-family: monospace; }
+.dp-close { background: none; border: none; color: #64748b; font-size: 1.4rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
 .dp-close:hover { background: #1e293b; color: #e2e8f0; }
-.dp-body {
-  padding: 16px; overflow-y: auto; flex: 1;
-  font-size: 0.8rem; line-height: 1.6; color: #94a3b8; font-family: monospace;
-}
+.dp-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 0.8rem; line-height: 1.6; color: #94a3b8; font-family: monospace; }
 .dp-section { margin-bottom: 16px; }
-.dp-section-title {
-  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
-  color: #475569; margin-bottom: 8px; padding-bottom: 4px;
-  border-bottom: 1px solid #1e293b;
-}
-.dp-info-row {
-  display: flex; justify-content: space-between; padding: 4px 0;
-  border-bottom: 1px solid #1e293b08;
-}
+.dp-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
+.dp-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
 .dp-info-label { color: #475569; font-size: 0.7rem; }
 .dp-info-value { color: #e2e8f0; font-size: 0.75rem; }
-.dp-tag {
-  display: inline-block; font-size: 0.65rem; padding: 2px 6px;
-  border-radius: 3px; margin: 2px 2px 2px 0;
-}
+.dp-tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 2px 0; }
 .dp-tag-skill { background: rgba(139,92,246,0.15); color: #a78bfa; }
 .dp-tag-mcp { background: rgba(16,185,129,0.12); color: #6ee7b7; }
-.dp-tag-team { background: rgba(129,140,248,0.1); color: #a5b4fc; }
-
-/* Task list in panel */
-.task-item {
-  padding: 8px 10px; margin-bottom: 6px; border-radius: 6px;
-  background: #1e293b; border-left: 3px solid #475569;
-}
+.task-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; background: #1e293b; border-left: 3px solid #475569; }
 .task-item.running { border-left-color: #fbbf24; }
 .task-item.thinking { border-left-color: #8b5cf6; }
 .task-item.done { border-left-color: #22c55e; opacity: 0.6; }
-.task-item.queued { border-left-color: #475569; opacity: 0.5; }
-.task-status {
-  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
-  margin-bottom: 3px;
-}
+.task-status { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
 .task-status.running { color: #fbbf24; }
 .task-status.thinking { color: #8b5cf6; }
 .task-status.done { color: #22c55e; }
-.task-status.queued { color: #475569; }
 .task-name { color: #e2e8f0; font-size: 0.75rem; margin-bottom: 2px; }
 .task-detail { color: #64748b; font-size: 0.65rem; }
-.task-progress {
-  height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px;
-  overflow: hidden;
+.task-progress { height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.task-progress-bar { height: 100%; border-radius: 2px; }
+
+/* ═══ Scroll Overlay ═══ */
+#scroll-scrim { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; }
+#scroll-scrim.open { display:flex; align-items:center; justify-content:center; }
+#scroll-wrap {
+  width: 420px; max-width: 92vw; max-height: 85vh;
+  display: flex; flex-direction: column; image-rendering: pixelated;
 }
-.task-progress-bar {
-  height: 100%; border-radius: 2px; transition: width 0.3s;
+/* Top spindle */
+.scroll-spindle {
+  height: 28px; background: #8b6a3e;
+  border: 3px solid #5c3d1e; position: relative; z-index: 2;
+  box-shadow: inset 0 4px 0 #a07d4e, inset 0 -4px 0 #6b4c2a;
 }
+.scroll-spindle::before, .scroll-spindle::after {
+  content:''; position:absolute; top:-6px; width:22px; height:38px;
+  background:#6b4c2a; border:3px solid #3d2a12; border-radius:4px;
+}
+.scroll-spindle::before { left:-14px; }
+.scroll-spindle::after { right:-14px; }
+/* Parchment body */
+.scroll-body {
+  background: #f0deb4;
+  border-left: 6px solid #c9a96e; border-right: 6px solid #c9a96e;
+  box-shadow: inset 4px 0 8px rgba(0,0,0,0.08), inset -4px 0 8px rgba(0,0,0,0.08);
+  padding: 20px 24px; overflow-y: auto; flex: 1; min-height: 120px; max-height: 55vh;
+  font-family: monospace; color: #3d2a12; font-size: 13px; line-height: 1.7;
+}
+.scroll-body::-webkit-scrollbar { width:6px; }
+.scroll-body::-webkit-scrollbar-thumb { background:#c9a96e; border-radius:3px; }
+.scroll-from { font-size:11px; color:#8b6a3e; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; }
+.scroll-title { font-size:16px; font-weight:bold; color:#3d2a12; margin-bottom:12px; border-bottom:2px dashed #c9a96e; padding-bottom:8px; }
+.scroll-finding { margin-bottom:10px; padding-left:12px; border-left:3px solid #c9a96e; }
+.scroll-finding b { color:#5c3d1e; }
+/* Button row */
+.scroll-actions {
+  background: #e8d4a8; border-left:6px solid #c9a96e; border-right:6px solid #c9a96e;
+  padding: 12px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.scroll-btn {
+  font-family: monospace; font-size: 13px; font-weight: bold; text-transform: uppercase;
+  letter-spacing: 1px; padding: 8px 22px; border: 3px solid #1a1a1a; cursor: pointer;
+  image-rendering: pixelated; position: relative;
+  box-shadow: 0 4px 0 #1a1a1a;
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+.scroll-btn:active { transform:translateY(3px); box-shadow:0 1px 0 #1a1a1a; }
+.scroll-btn-next {
+  background: linear-gradient(180deg, #5ce65c 0%, #22b822 50%, #1a9a1a 100%);
+  color: #0a3d0a;
+}
+.scroll-btn-retry {
+  background: linear-gradient(180deg, #ffb347 0%, #e68a00 50%, #cc7700 100%);
+  color: #4a2800;
+}
+.scroll-retry-input {
+  width: 100%; padding: 9px 12px; font-family: monospace; font-size: 13px;
+  background: #f5ecd4; border: 2px solid #c9a96e; color: #3d2a12;
+  outline: none; display:none; margin-top: 4px;
+}
+.scroll-retry-input:focus { border-color: #e68a00; }
+.scroll-retry-input.show { display:block; }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
+
+<!-- Scroll overlay for agent findings -->
+<div id="scroll-scrim">
+  <div id="scroll-wrap">
+    <div class="scroll-spindle"></div>
+    <div class="scroll-body" id="scroll-body"></div>
+    <div class="scroll-actions">
+      <button class="scroll-btn scroll-btn-next" id="scroll-next">NEXT</button>
+      <button class="scroll-btn scroll-btn-retry" id="scroll-retry">RETRY</button>
+      <input class="scroll-retry-input" id="scroll-retry-input" placeholder="Tell the agent what to redo..." />
+    </div>
+    <div class="scroll-spindle"></div>
+  </div>
+</div>
+
 <div id="detail-scrim"></div>
 <div id="detail-panel">
   <div class="dp-header">
-    <div style="display:flex;align-items:center">
-      <span class="dp-badge" id="dp-badge"></span>
-      <h2 id="dp-title"></h2>
-    </div>
+    <div style="display:flex;align-items:center"><span class="dp-badge" id="dp-badge"></span><h2 id="dp-title"></h2></div>
     <button class="dp-close" id="dp-close">&times;</button>
   </div>
   <div class="dp-body" id="dp-body"></div>
 </div>
 <script>
 // ═══════════════════════════════════════════
-// DATA
+// DATA — Only discover, design, build
 // ═══════════════════════════════════════════
-
-// Simulated task activities per agent
 const AGENT_TASKS = {
-  "Engineer": [
-    { name: "Reviewing PR #42 architecture", status: "running", detail: "/review — checking code patterns", progress: 65 },
-    { name: "Planning auth module refactor", status: "thinking", detail: "/build — evaluating JWT vs session", progress: 30 },
-    { name: "Updated API error handlers", status: "done", detail: "/build — added 4 error types", progress: 100 },
-    { name: "Spec validation: payment flow", status: "queued", detail: "/spec — waiting for BizOps input", progress: 0 },
-  ],
-  "Designer": [
-    { name: "Wireframing onboarding flow", status: "running", detail: "/design — 3 of 5 screens done", progress: 60 },
-    { name: "Reviewing color contrast (WCAG)", status: "thinking", detail: "/review — checking AA compliance", progress: 45 },
-    { name: "Component library audit", status: "done", detail: "/design — catalogued 24 components", progress: 100 },
-  ],
   "BizOps": [
     { name: "Analyzing competitor pricing", status: "running", detail: "/discover — scanning 5 competitors", progress: 40 },
     { name: "TAM/SAM/SOM estimation", status: "thinking", detail: "/discover — modeling market size", progress: 20 },
-    { name: "Go-to-market draft v1", status: "done", detail: "/release-notes — launch strategy", progress: 100 },
-  ],
-  "QA": [
-    { name: "Running integration test suite", status: "running", detail: "/review — 127/203 tests passed", progress: 63 },
-    { name: "Security audit: input validation", status: "thinking", detail: "/review — checking XSS vectors", progress: 35 },
-    { name: "Edge case: empty cart checkout", status: "done", detail: "/ship — verified fix", progress: 100 },
-    { name: "Load test preparation", status: "queued", detail: "/ship — setting up k6 scripts", progress: 0 },
+    { name: "Go-to-market draft v1", status: "done", detail: "/discover — launch strategy complete", progress: 100 },
   ],
   "Researcher": [
     { name: "Scraping competitor features", status: "running", detail: "/discover — Context7 deep dive", progress: 55 },
     { name: "User sentiment analysis", status: "thinking", detail: "/discover — processing reviews", progress: 25 },
     { name: "Trend report: AI tooling 2026", status: "done", detail: "/discover — 12 key findings", progress: 100 },
   ],
-  "Content Strategist": [
-    { name: "Drafting launch announcement", status: "running", detail: "/release-notes — customer version", progress: 70 },
-    { name: "Tutorial: Getting Started guide", status: "thinking", detail: "/write-tutorial — outlining steps", progress: 15 },
-    { name: "Social media copy (5 posts)", status: "done", detail: "/release-notes — approved by CEO", progress: 100 },
+  "Designer": [
+    { name: "Wireframing onboarding flow", status: "running", detail: "/design — 3 of 5 screens done", progress: 60 },
+    { name: "Color contrast audit (WCAG)", status: "thinking", detail: "/design — checking AA compliance", progress: 45 },
+    { name: "Component library audit", status: "done", detail: "/design — catalogued 24 components", progress: 100 },
+  ],
+  "Engineer": [
+    { name: "Building auth module", status: "running", detail: "/build — JWT implementation", progress: 65 },
+    { name: "Planning API structure", status: "thinking", detail: "/build — REST vs GraphQL", progress: 30 },
+    { name: "Updated error handlers", status: "done", detail: "/build — added 4 error types", progress: 100 },
   ],
 };
 
+// Agent findings — populated by real API calls, with fallback demo data
+const AGENT_FINDINGS = {};
+const DEMO_FINDINGS = {
+  "BizOps": { title:"Market Analysis Report", findings:[
+    {label:"Competitor Pricing",text:"3 of 5 competitors charge $15-25/mo. One outlier at $49/mo bundles premium support."},
+    {label:"TAM Estimate",text:"Total addressable market ~$2.4B for AI dev tools. SAM for solo/indie devs: ~$180M."},
+    {label:"Go-to-Market",text:"Recommend freemium with $12/mo pro tier. Launch on Product Hunt + HN."},
+    {label:"Key Risk",text:"Crowded market — differentiation through UX and agent orchestration is the moat."},
+  ]},
+  "Researcher": { title:"Competitive Intelligence Brief", findings:[
+    {label:"Feature Gap",text:"No competitor offers visual agent orchestration. Most use chat-only with no transparency."},
+    {label:"User Sentiment",text:"Reddit/HN: 72% positive on AI coding tools, #1 complaint is 'black box' — users want to see what the AI is doing."},
+    {label:"Trend",text:"Agent-based architectures growing 3x YoY. Multi-agent frameworks gaining traction but lack polish."},
+    {label:"Opportunity",text:"'Game-ified AI dashboard' is a completely unoccupied niche."},
+  ]},
+};
+const AGENT_TITLES = { "BizOps":"Market Analysis Report", "Researcher":"Competitive Intelligence Brief" };
+
+// Fire real API call when agent starts working
+async function fetchAgentFindings(agentName) {
+  try {
+    const resp = await fetch("/api/agent", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ agent: agentName }),
+    });
+    if (!resp.ok) throw new Error("API " + resp.status);
+    const data = await resp.json();
+    AGENT_FINDINGS[agentName] = { title: AGENT_TITLES[agentName] || agentName + " Report", findings: data.findings };
+  } catch(e) {
+    console.warn("API call failed for", agentName, "— using demo data:", e.message);
+    AGENT_FINDINGS[agentName] = DEMO_FINDINGS[agentName];
+  }
+}
+
 const AGENTS = [
-  { name:"Engineer", model:"opus", skills:["build","review","ship"],
-    mcps:["GitHub","Chrome DevTools"], desc:"Architecture & implementation",
-    zone:"build", color:"#3b82f6", darkColor:"#1e3a5f" },
-  { name:"Designer", model:"opus", skills:["design","review"],
-    mcps:["Chrome DevTools"], desc:"UI/UX & wireframes",
-    zone:"design", color:"#ec4899", darkColor:"#831843" },
-  { name:"BizOps", model:"opus", skills:["discover","release-notes"],
-    mcps:[], desc:"Market analysis & strategy",
-    zone:"discover", color:"#22c55e", darkColor:"#14532d" },
-  { name:"QA", model:"sonnet", skills:["review","ship"],
-    mcps:["GitHub","Chrome DevTools"], desc:"Testing & security",
-    zone:"review", color:"#f97316", darkColor:"#7c2d12" },
-  { name:"Researcher", model:"sonnet", skills:["discover"],
-    mcps:["Context7"], desc:"Competitive analysis & trends",
-    zone:"discover", color:"#8b5cf6", darkColor:"#3b0764" },
-  { name:"Content Strategist", model:"opus", skills:["release-notes","write-tutorial"],
-    mcps:[], desc:"Copy, tutorials & launch comms",
-    zone:"ship", color:"#06b6d4", darkColor:"#164e63" }
+  { name:"BizOps", model:"opus", skills:["discover"], mcps:[], desc:"Market analysis & strategy",
+    zone:"discover", color:"#22c55e", darkColor:"#14532d", workRole:"store" },
+  { name:"Researcher", model:"sonnet", skills:["discover"], mcps:["Context7"], desc:"Competitive analysis & trends",
+    zone:"discover", color:"#8b5cf6", darkColor:"#3b0764", workRole:"lab" },
+  { name:"Designer", model:"opus", skills:["design"], mcps:["Chrome DevTools"], desc:"UI/UX & wireframes",
+    zone:"design", color:"#ec4899", darkColor:"#831843", workRole:"studio" },
+  { name:"Engineer", model:"opus", skills:["build"], mcps:["GitHub"], desc:"Architecture & implementation",
+    zone:"build", color:"#3b82f6", darkColor:"#1e3a5f", workRole:"desk" },
 ];
 
-const LIFECYCLE = ["discover","spec","design","build","review","ship"];
-const ZONE_NAMES = {
-  discover: "Discovery Zone", spec: "Spec Zone", design: "Design Zone",
-  build: "Build Zone", review: "Review Zone", ship: "Ship Zone"
-};
-const TEAMS = [
-  { name: "Discovery Sprint", members: ["BizOps", "Researcher"] },
-  { name: "Build & QA", members: ["Engineer", "Designer", "QA"] },
-  { name: "Ship & Launch", members: ["Content Strategist", "QA"] }
-];
+const ZONE_NAMES = { discover:"Discovery Zone", design:"Design Zone", build:"Build Zone" };
+const TEAMS = [{ name:"Discovery Sprint", members:["BizOps","Researcher"] }];
 
 // ═══════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════
-const TILE = 16;
-const SCALE = 3;
-const TS = TILE * SCALE;
-const COLS = 52;
-const ROWS = 40;
-const WORLD_W = COLS * TILE;
-const WORLD_H = ROWS * TILE;
+const TILE = 16, SCALE = 3, TS = TILE*SCALE;
+const COLS = 48, ROWS = 34;
+const WORLD_W = COLS*TILE, WORLD_H = ROWS*TILE;
 
-// ═══════════════════════════════════════════
-// CANVAS SETUP
-// ═══════════════════════════════════════════
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', resize); resize();
 
 // ═══════════════════════════════════════════
-// ZONE DEFINITIONS
+// ZONES — Discover is large & nature-themed
 // ═══════════════════════════════════════════
 const ZONES = {
-  discover: { x:3,  y:3,  w:14, h:10, color:"#22c55e", darkColor:"#166534" },
-  spec:     { x:20, y:3,  w:14, h:10, color:"#a855f7", darkColor:"#6b21a8" },
-  design:   { x:35, y:3,  w:14, h:10, color:"#ec4899", darkColor:"#9d174d" },
-  build:    { x:3,  y:22, w:14, h:10, color:"#3b82f6", darkColor:"#1e40af" },
-  review:   { x:20, y:22, w:14, h:10, color:"#f97316", darkColor:"#9a3412" },
-  ship:     { x:35, y:22, w:14, h:10, color:"#06b6d4", darkColor:"#155e75" }
+  discover: { x:2, y:2, w:22, h:18, color:"#22c55e", darkColor:"#166534" },
+  design:   { x:28, y:2, w:14, h:12, color:"#ec4899", darkColor:"#9d174d" },
+  build:    { x:28, y:18, w:14, h:12, color:"#3b82f6", darkColor:"#1e40af" },
+};
+
+// Workstation positions (tile coords) & egg positions within discover
+const WORKSTATIONS = {
+  store: { x:5, y:5, w:5, h:4 },   // BizOps store
+  lab:   { x:16, y:13, w:5, h:4 },  // Researcher lab
+};
+const EGG_POS = {
+  "BizOps":    { x:10, y:7 },
+  "Researcher": { x:10, y:13 },
+  "Designer":  { x:33, y:7 },
+  "Engineer":  { x:33, y:23 },
+};
+const WORK_POS = {
+  "BizOps":    { x:7, y:7 },
+  "Researcher": { x:18, y:15 },
+  "Designer":  { x:34, y:7 },
+  "Engineer":  { x:34, y:23 },
 };
 
 // ═══════════════════════════════════════════
 // TILEMAP
-// 0=grass, 1=path, 2=water, 3=zone floor,
-// 4=zone border (visual only, walkable),
-// 5=flowers, 6=tree
+// 0=grass 1=path 2=water 3=zone-floor 4=zone-border
+// 5=flowers 6=tree 7=lab-floor 8=lab-equip(block)
+// 9=store-floor 10=store-shelf(block) 11=dense-tree
 // ═══════════════════════════════════════════
 const map = [];
-for (let y = 0; y < ROWS; y++) {
-  map[y] = [];
-  for (let x = 0; x < COLS; x++) map[y][x] = 0;
+for (let y=0;y<ROWS;y++){map[y]=[];for(let x=0;x<COLS;x++)map[y][x]=0;}
+
+// Place zone borders & floors
+for(const[key,z]of Object.entries(ZONES)){
+  for(let dy=0;dy<z.h;dy++)for(let dx=0;dx<z.w;dx++){
+    const tx=z.x+dx,ty=z.y+dy;
+    if(ty<ROWS&&tx<COLS) map[ty][tx]=(dx===0||dx===z.w-1||dy===0||dy===z.h-1)?4:3;
+  }
 }
 
-// Place zones
-for (const [key, z] of Object.entries(ZONES)) {
-  for (let dy = 0; dy < z.h; dy++) {
-    for (let dx = 0; dx < z.w; dx++) {
-      const tx = z.x + dx, ty = z.y + dy;
-      if (ty < ROWS && tx < COLS) {
-        map[ty][tx] = (dx === 0 || dx === z.w-1 || dy === 0 || dy === z.h-1) ? 4 : 3;
-      }
+// --- DISCOVER ZONE: Nature features ---
+// Pond (upper-right area of discover)
+const pondX=17,pondY=5;
+for(let dy=0;dy<4;dy++)for(let dx=0;dx<4;dx++){
+  const px=pondX+dx,py=pondY+dy;
+  if(map[py]&&map[py][px]===3)map[py][px]=2;
+}
+
+// Store area (BizOps workstation) — wood floor + shelves
+const st=WORKSTATIONS.store;
+for(let dy=0;dy<st.h;dy++)for(let dx=0;dx<st.w;dx++){
+  const tx=st.x+dx,ty=st.y+dy;
+  if(map[ty]&&map[ty][tx]===3){
+    if(dy===0||(dx===0&&dy<st.h-1)) map[ty][tx]=10; // shelves on top & left wall
+    else map[ty][tx]=9; // wood floor
+  }
+}
+
+// Lab area (Researcher workstation) — grey floor + equipment
+const lb=WORKSTATIONS.lab;
+for(let dy=0;dy<lb.h;dy++)for(let dx=0;dx<lb.w;dx++){
+  const tx=lb.x+dx,ty=lb.y+dy;
+  if(map[ty]&&map[ty][tx]===3){
+    if(dy===0||(dx===lb.w-1&&dy<lb.h-1)) map[ty][tx]=8; // equipment on top & right
+    else map[ty][tx]=7; // lab floor
+  }
+}
+
+// Winding path through discover zone
+const discPath = [
+  // Entrance from right side
+  ...Array.from({length:4},(_,i)=>({x:23+i,y:10})),
+  ...Array.from({length:4},(_,i)=>({x:23+i,y:11})),
+  // Main vertical path through discover
+  ...Array.from({length:16},(_,i)=>({x:12,y:3+i})),
+  ...Array.from({length:16},(_,i)=>({x:13,y:3+i})),
+  // Branch to store
+  ...Array.from({length:3},(_,i)=>({x:9+i,y:7})),
+  ...Array.from({length:3},(_,i)=>({x:9+i,y:8})),
+  // Branch to lab
+  ...Array.from({length:3},(_,i)=>({x:14+i,y:15})),
+  ...Array.from({length:3},(_,i)=>({x:14+i,y:16})),
+  // Connection horizontal at middle
+  ...Array.from({length:10},(_,i)=>({x:4+i,y:10})),
+  ...Array.from({length:10},(_,i)=>({x:4+i,y:11})),
+];
+for(const p of discPath){
+  if(map[p.y]&&map[p.y][p.x]===3) map[p.y][p.x]=1;
+}
+
+// Paths connecting zones
+// Discover right → Design left (y:10,11)
+for(let x=ZONES.discover.x+ZONES.discover.w;x<ZONES.design.x;x++){map[10][x]=1;map[11][x]=1;}
+// Design bottom → Build top (x:34,35)
+for(let y=ZONES.design.y+ZONES.design.h;y<ZONES.build.y;y++){map[y][34]=1;map[y][35]=1;}
+
+// Punch doorways
+for(let pass=0;pass<2;pass++){
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+    if(map[y][x]===4){
+      const n=[map[y-1]?.[x],map[y+1]?.[x],map[y][x-1],map[y][x+1]];
+      if(n.includes(1)||(pass===1&&n.includes(3)&&n.includes(1))) map[y][x]=3;
     }
   }
 }
 
-// Paths connecting zones horizontally (top row y=8,9)
-for (let x = ZONES.discover.x + ZONES.discover.w; x < ZONES.spec.x; x++) { map[8][x] = 1; map[9][x] = 1; }
-for (let x = ZONES.spec.x + ZONES.spec.w; x < ZONES.design.x; x++) { map[8][x] = 1; map[9][x] = 1; }
-// Paths connecting zones horizontally (bottom row y=27,28)
-for (let x = ZONES.build.x + ZONES.build.w; x < ZONES.review.x; x++) { map[27][x] = 1; map[28][x] = 1; }
-for (let x = ZONES.review.x + ZONES.review.w; x < ZONES.ship.x; x++) { map[27][x] = 1; map[28][x] = 1; }
-// Vertical paths connecting top to bottom
-for (let y = ZONES.discover.y + ZONES.discover.h; y < ZONES.build.y; y++) {
-  map[y][10] = 1; map[y][11] = 1;
-  map[y][27] = 1; map[y][28] = 1;
-  map[y][42] = 1; map[y][43] = 1;
-}
-
-// Punch doorways: wherever a path tile is adjacent to a zone border, open it
-for (let y = 1; y < ROWS-1; y++) {
-  for (let x = 1; x < COLS-1; x++) {
-    if (map[y][x] === 4) {
-      // Check if any neighbor is a path
-      if (map[y-1][x] === 1 || map[y+1][x] === 1 || map[y][x-1] === 1 || map[y][x+1] === 1) {
-        map[y][x] = 3; // convert border to floor (doorway)
-      }
-    }
+// Scatter trees in discover zone grass areas
+for(let y=ZONES.discover.y+1;y<ZONES.discover.y+ZONES.discover.h-1;y++){
+  for(let x=ZONES.discover.x+1;x<ZONES.discover.x+ZONES.discover.w-1;x++){
+    if(map[y][x]===3&&Math.random()<0.08) map[y][x]=6;
   }
 }
-// Also punch doorways where vertical paths meet zone borders (need 2-wide)
-// Extend: if a floor-doorway neighbor is also a border, open it too
-for (let y = 1; y < ROWS-1; y++) {
-  for (let x = 1; x < COLS-1; x++) {
-    if (map[y][x] === 4) {
-      if (map[y-1][x] === 3 || map[y+1][x] === 3 || map[y][x-1] === 3 || map[y][x+1] === 3) {
-        // Check if this border tile is next to a doorway AND close to a path
-        const nearPath = map[y-2]?.[x] === 1 || map[y+2]?.[x] === 1 ||
-                         map[y]?.[x-2] === 1 || map[y]?.[x+2] === 1 ||
-                         map[y-1]?.[x] === 1 || map[y+1]?.[x] === 1 ||
-                         map[y]?.[x-1] === 1 || map[y]?.[x+1] === 1;
-        if (nearPath) map[y][x] = 3;
-      }
-    }
-  }
-}
+// Dense trees on world borders
+for(let x=0;x<COLS;x++){if(map[0][x]===0)map[0][x]=11;if(map[ROWS-1][x]===0)map[ROWS-1][x]=11;}
+for(let y=0;y<ROWS;y++){if(map[y][0]===0)map[y][0]=11;if(map[y][COLS-1]===0)map[y][COLS-1]=11;}
 
-// Water pond (away from paths)
-for (let dy = 0; dy < 3; dy++) {
-  for (let dx = 0; dx < 4; dx++) {
-    const px = 14 + dx, py = 17 + dy;
-    if (py < ROWS && px < COLS && map[py][px] === 0) map[py][px] = 2;
-  }
-}
+// Flowers on discover zone grass
+for(let y=ZONES.discover.y+1;y<ZONES.discover.y+ZONES.discover.h-1;y++)
+  for(let x=ZONES.discover.x+1;x<ZONES.discover.x+ZONES.discover.w-1;x++)
+    if(map[y][x]===3&&Math.random()<0.06) map[y][x]=5;
 
-// Scatter flowers
-for (let y = 0; y < ROWS; y++)
-  for (let x = 0; x < COLS; x++)
-    if (map[y][x] === 0 && Math.random() < 0.04) map[y][x] = 5;
+// Flowers on open grass
+for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)
+  if(map[y][x]===0&&Math.random()<0.03) map[y][x]=5;
 
-// Trees along edges
-for (let x = 0; x < COLS; x++) { if (map[0][x] === 0) map[0][x] = 6; if (map[ROWS-1][x] === 0) map[ROWS-1][x] = 6; }
-for (let y = 0; y < ROWS; y++) { if (map[y][0] === 0) map[y][0] = 6; if (map[y][COLS-1] === 0) map[y][COLS-1] = 6; }
-
-// Collision: only water and trees block
-function isBlocked(tx, ty) {
-  if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return true;
-  const t = map[ty][tx];
-  return t === 2 || t === 6;
+// Collision
+function isBlocked(tx,ty){
+  if(tx<0||ty<0||tx>=COLS||ty>=ROWS)return true;
+  const t=map[ty][tx];
+  return t===2||t===6||t===8||t===10||t===11;
 }
 
 // ═══════════════════════════════════════════
 // TILE COLORS
 // ═══════════════════════════════════════════
-const GRASS1 = "#88c070", GRASS2 = "#78b060";
-const PATH1 = "#d8b068", PATH2 = "#c8a058";
-const WATER1 = "#5090d0", WATER2 = "#60a0e0";
-const FLOWER_COLORS = ["#ff6b6b","#ffd93d","#6bcb77","#4d96ff"];
+const GRASS1="#88c070",GRASS2="#78b060",PATH1="#d8b068",PATH2="#c8a058";
+const WATER1="#5090d0",WATER2="#60a0e0";
+const FLOWER_COLORS=["#ff6b6b","#ffd93d","#6bcb77","#4d96ff"];
+const LAB_FL="#8090a0",LAB_FL2="#708090",LAB_EQ="#506070";
+const STORE_FL="#c8a870",STORE_FL2="#b89860",STORE_SH="#6b4226",STORE_SH2="#8b5a3e";
 
-function getZoneAt(tx, ty) {
-  for (const [key, z] of Object.entries(ZONES))
-    if (tx >= z.x && tx < z.x+z.w && ty >= z.y && ty < z.y+z.h) return z;
-  return null;
-}
-function getZoneKeyAt(tx, ty) {
-  for (const [key, z] of Object.entries(ZONES))
-    if (tx >= z.x && tx < z.x+z.w && ty >= z.y && ty < z.y+z.h) return key;
-  return "";
-}
+function getZoneAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return z;return null;}
+function getZoneKeyAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return k;return"";}
 
 // ═══════════════════════════════════════════
-// SPRITES — Claude bot base + profession props
+// SPRITES
 // ═══════════════════════════════════════════
-const _ = null;
-const CB = "#C4856B"; // Claude body terracotta
-const Cd = "#A8705A"; // Claude darker shade
-const EY = "#2a2a2a"; // Eyes
+const _=null,CB="#C4856B",Cd="#A8705A",EY="#2a2a2a";
 
-// Base Claude bot — frame 1 (standing)
-function claudeBase1() {
-  return [
-    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
-    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
+function claudeBase1(){return[
+[_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],[_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+[_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],[_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]];}
+
+function claudeBase2(){return[
+[_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],[_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+[_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],[_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],[_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+[_,CB,CB,CB,_,_,_,_,_,_,_,_,CB,CB,CB,_],[CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],
+[CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]];}
+
+function addProps(base,overlays){const s=base.map(r=>[...r]);for(const[y,x,c]of overlays)if(y>=0&&y<16&&x>=0&&x<16)s[y][x]=c;return s;}
+
+// Agent props
+const HAT_Y="#fbbf24",HAT_Yd="#d4a017";
+const BER="#4a4a5a",BERd="#333340",PB_H="#8B6914",PB_T="#3bbef0";
+const TIE="#22c55e",TIEd="#16a34a";
+const GC="#1e293b",GCt="#fbbf24";
+
+const AGENT_PROPS=[
+  // BizOps — green tie
+  [[8,7,TIE],[8,8,TIE],[9,7,TIE],[9,8,TIE],[10,7,TIEd],[10,8,TIEd],[11,7,TIE]],
+  // Researcher — graduation cap
+  [[0,0,GC],[0,1,GC],[0,2,GC],[0,3,GC],[0,4,GC],[0,5,GC],[0,6,GC],[0,7,GC],[0,8,GC],[0,9,GC],[0,10,GC],[0,11,GC],[0,12,GC],[0,13,GC],[0,14,GC],[0,15,GC],
+   [1,2,GC],[1,3,GC],[1,4,GC],[1,5,GC],[1,6,GC],[1,7,GC],[1,8,GC],[1,9,GC],[1,10,GC],[1,11,GC],[1,12,GC],[1,13,GC],[1,14,GCt],[2,15,GCt],[3,15,GCt]],
+  // Designer — beret + paintbrush
+  [[0,1,BER],[0,2,BER],[0,3,BER],[0,4,BER],[0,5,BER],[0,6,BER],[0,7,BER],[0,8,BER],[0,9,BER],[0,10,BER],[0,11,BER],[0,0,BERd],
+   [1,2,BER],[1,3,BER],[1,4,BER],[1,5,BER],[1,6,BER],[1,7,BER],[1,8,BER],[1,9,BER],[1,10,BER],[1,11,BER],[1,12,BER],[1,13,BER],
+   [8,15,PB_H],[9,15,PB_H],[10,15,PB_T],[11,15,PB_T]],
+  // Engineer — hard hat
+  [[0,1,HAT_Y],[0,2,HAT_Y],[0,3,HAT_Y],[0,4,HAT_Y],[0,5,HAT_Y],[0,6,HAT_Y],[0,7,HAT_Y],[0,8,HAT_Y],[0,9,HAT_Y],[0,10,HAT_Y],[0,11,HAT_Y],[0,12,HAT_Y],[0,13,HAT_Y],[0,14,HAT_Y],
+   [1,2,HAT_Y],[1,3,HAT_Y],[1,4,HAT_Y],[1,5,HAT_Y],[1,6,HAT_Y],[1,7,HAT_Y],[1,8,HAT_Y],[1,9,HAT_Y],[1,10,HAT_Y],[1,11,HAT_Y],[1,12,HAT_Y],[1,13,HAT_Y],
+   [1,4,HAT_Yd],[1,5,HAT_Yd],[1,6,HAT_Yd],[1,7,HAT_Yd],[1,8,HAT_Yd],[1,9,HAT_Yd],[1,10,HAT_Yd],[1,11,HAT_Yd]],
+];
+
+// Egg sprite — cream oval with green spots
+function makeEggSprite(){
+  const W="#f5f0e0",Wl="#faf7ed",G="#6bcb77",Gd="#4a9e5a",O="#2a2a2a";
+  return[
+    [_,_,_,_,_,_,W,W,W,W,_,_,_,_,_,_],
+    [_,_,_,_,_,W,Wl,Wl,Wl,W,W,_,_,_,_,_],
+    [_,_,_,_,W,Wl,Wl,Wl,Wl,Wl,W,W,_,_,_,_],
+    [_,_,_,W,Wl,Wl,Wl,G,Wl,Wl,Wl,W,W,_,_,_],
+    [_,_,W,Wl,Wl,Wl,G,G,Wl,Wl,Wl,Wl,W,_,_,_],
+    [_,_,W,Wl,Wl,Wl,Wl,Wl,Wl,Wl,Wl,Wl,W,_,_,_],
+    [_,W,W,Wl,Wl,Wl,Wl,Wl,Wl,G,Wl,Wl,W,W,_,_],
+    [_,W,W,Wl,Wl,Wl,Wl,Wl,Wl,G,G,Wl,W,W,_,_],
+    [_,W,W,Wl,Wl,G,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_],
+    [_,W,W,Wl,G,G,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_],
+    [_,_,W,Wl,Wl,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_,_],
+    [_,_,W,W,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_,_,_],
+    [_,_,_,W,W,Wl,Wl,Wl,Wl,W,W,_,_,_,_,_],
+    [_,_,_,_,W,W,W,W,W,W,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
     [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   ];
 }
 
-// Base Claude bot — frame 2 (walking, legs splayed)
-function claudeBase2() {
-  return [
-    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
-    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
-    [_,CB,CB,CB,_,_,_,_,_,_,_,_,CB,CB,CB,_],
-    [CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],
-    [CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],
+// Hatching egg — cracked
+function makeEggCracked(){
+  const W="#f5f0e0",Wl="#faf7ed",G="#6bcb77",O="#2a2a2a";
+  return[
+    [_,_,_,_,_,_,W,W,_,W,_,_,_,_,_,_],
+    [_,_,_,_,_,W,Wl,_,Wl,W,W,_,_,_,_,_],
+    [_,_,_,_,W,Wl,Wl,Wl,_,Wl,W,W,_,_,_,_],
+    [_,_,_,W,_,Wl,Wl,G,Wl,_,Wl,W,W,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    [_,W,W,Wl,G,G,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_],
+    [_,_,W,Wl,Wl,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_,_],
+    [_,_,W,W,Wl,Wl,Wl,Wl,Wl,Wl,W,W,_,_,_,_],
+    [_,_,_,W,W,Wl,Wl,Wl,Wl,W,W,_,_,_,_,_],
+    [_,_,_,_,W,W,W,W,W,W,_,_,_,_,_,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
     [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   ];
 }
 
-// Deep-copy a sprite and overlay prop pixels
-function addProps(base, overlays) {
-  const s = base.map(row => [...row]);
-  for (const [y, x, color] of overlays) {
-    if (y >= 0 && y < 16 && x >= 0 && x < 16) s[y][x] = color;
-  }
-  return s;
-}
+// CEO sprite
+const CEO1=(()=>{const R="#e53e3e",Rd="#c53030",B="#3182ce",Bd="#2c5282",S="#ffd5b0",E="#1a1a2e",W="#ffffff",H="#4a3728";return[
+[_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],[_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],[_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
+[_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],[_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],[_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+[_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],[_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],[_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+[_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],[_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],[_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
+[_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],[_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],[_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],
+[_,_,_,Bd,Bd,Bd,Bd,_,Bd,Bd,Bd,Bd,_,_,_,_]];})();
+const CEO2=(()=>{const R="#e53e3e",Rd="#c53030",B="#3182ce",Bd="#2c5282",S="#ffd5b0",E="#1a1a2e",W="#ffffff",H="#4a3728";return[
+[_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],[_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],[_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
+[_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],[_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],[_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+[_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],[_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],[_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+[_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],[_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],[_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
+[_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],[_,_,_,Bd,Bd,Bd,_,_,_,Bd,Bd,Bd,_,_,_,_],[_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_],
+[_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_]];})();
 
-// ---- ENGINEER: Yellow hard hat ----
-const HAT_Y = "#fbbf24", HAT_Yd = "#d4a017";
-const engineerProps = [
-  // Hard hat brim + dome
-  [0,1,HAT_Y],[0,2,HAT_Y],[0,3,HAT_Y],[0,4,HAT_Y],[0,5,HAT_Y],[0,6,HAT_Y],[0,7,HAT_Y],[0,8,HAT_Y],[0,9,HAT_Y],[0,10,HAT_Y],[0,11,HAT_Y],[0,12,HAT_Y],[0,13,HAT_Y],[0,14,HAT_Y],
-  [1,2,HAT_Y],[1,3,HAT_Y],[1,4,HAT_Y],[1,5,HAT_Y],[1,6,HAT_Y],[1,7,HAT_Y],[1,8,HAT_Y],[1,9,HAT_Y],[1,10,HAT_Y],[1,11,HAT_Y],[1,12,HAT_Y],[1,13,HAT_Y],
-  // Hat band
-  [1,4,HAT_Yd],[1,5,HAT_Yd],[1,6,HAT_Yd],[1,7,HAT_Yd],[1,8,HAT_Yd],[1,9,HAT_Yd],[1,10,HAT_Yd],[1,11,HAT_Yd],
-];
+function spriteToCanvas(d){const c=document.createElement('canvas');c.width=16;c.height=16;const cx=c.getContext('2d');
+for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(d[y]&&d[y][x]){cx.fillStyle=d[y][x];cx.fillRect(x,y,1,1);}return c;}
 
-// ---- DESIGNER: Dark beret + paintbrush ----
-const BER = "#4a4a5a", BERd = "#333340";
-const PB_H = "#8B6914", PB_T = "#3bbef0", PB_Td = "#2a9bc7";
-const designerProps = [
-  // Beret (tilted left)
-  [0,1,BER],[0,2,BER],[0,3,BER],[0,4,BER],[0,5,BER],[0,6,BER],[0,7,BER],[0,8,BER],[0,9,BER],[0,10,BER],[0,11,BER],
-  [1,2,BER],[1,3,BER],[1,4,BER],[1,5,BER],[1,6,BER],[1,7,BER],[1,8,BER],[1,9,BER],[1,10,BER],[1,11,BER],[1,12,BER],[1,13,BER],
-  // Beret nub
-  [0,0,BERd],
-  // Paintbrush (held right side)
-  [8,15,PB_H],[9,15,PB_H],[10,15,PB_T],[11,15,PB_T],[12,15,PB_Td],
-];
-
-// ---- BIZOPS: Green tie ----
-const TIE = "#22c55e", TIEd = "#16a34a";
-const bizopsProps = [
-  // Tie knot + body
-  [8,7,TIE],[8,8,TIE],
-  [9,7,TIE],[9,8,TIE],
-  [10,7,TIEd],[10,8,TIEd],
-  [11,7,TIE],
-];
-
-// ---- QA: Detective/magnifying glass + cap ----
-const DET = "#6b4226", DETd = "#4a2e1a";
-const MG = "#94a3b8", MGl = "#cbd5e1";
-const qaProps = [
-  // Flat detective cap
-  [0,1,DET],[0,2,DET],[0,3,DET],[0,4,DET],[0,5,DET],[0,6,DET],[0,7,DET],[0,8,DET],[0,9,DET],[0,10,DET],[0,11,DET],[0,12,DET],[0,13,DET],[0,14,DET],
-  [1,2,DETd],[1,3,DETd],[1,4,DETd],[1,5,DETd],[1,6,DETd],[1,7,DETd],[1,8,DETd],[1,9,DETd],[1,10,DETd],[1,11,DETd],[1,12,DETd],[1,13,DETd],
-  // Magnifying glass (right side)
-  [9,15,MG],[10,15,MG],[10,14,_],[9,14,_],
-  [7,15,MGl],[8,15,MGl],[7,14,_],[6,15,MGl],[6,14,_],
-];
-
-// ---- RESEARCHER: Graduation cap ----
-const GC = "#1e293b", GCt = "#fbbf24";
-const researcherProps = [
-  // Mortarboard top
-  [0,0,GC],[0,1,GC],[0,2,GC],[0,3,GC],[0,4,GC],[0,5,GC],[0,6,GC],[0,7,GC],[0,8,GC],[0,9,GC],[0,10,GC],[0,11,GC],[0,12,GC],[0,13,GC],[0,14,GC],[0,15,GC],
-  [1,2,GC],[1,3,GC],[1,4,GC],[1,5,GC],[1,6,GC],[1,7,GC],[1,8,GC],[1,9,GC],[1,10,GC],[1,11,GC],[1,12,GC],[1,13,GC],
-  // Tassel
-  [1,14,GCt],[2,15,GCt],[3,15,GCt],
-];
-
-// ---- CONTENT STRATEGIST: Pencil behind ear + notebook ----
-const PEN = "#fbbf24", PENe = "#ec4899", PENt = "#2a2a2a";
-const NB = "#e2e8f0", NBd = "#94a3b8";
-const contentProps = [
-  // Pencil (sticking up from left ear)
-  [0,0,PENt],[0,1,PEN],
-  // Notebook held (left side)
-  [8,0,NB],[9,0,NB],[10,0,NB],[11,0,NB],
-  [8,1,NBd],[9,1,NBd],[10,1,NBd],[11,1,NBd],
-];
-
-// Build all agent sprites
-const AGENT_SPRITE_DATA = [
-  { props: engineerProps },       // Engineer
-  { props: designerProps },       // Designer
-  { props: bizopsProps },         // BizOps
-  { props: qaProps },             // QA
-  { props: researcherProps },     // Researcher
-  { props: contentProps },        // Content Strategist
-];
-
-// CEO sprite (Pokemon trainer - red cap, blue outfit)
-const CEO_SPRITE_1 = (() => {
-  const R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
-        S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
-  return [
-    [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
-    [_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],
-    [_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
-    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
-    [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
-    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
-    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
-    [_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
-    [_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],
-    [_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],
-    [_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],
-    [_,_,_,Bd,Bd,Bd,Bd,_,Bd,Bd,Bd,Bd,_,_,_,_],
-  ];
-})();
-const CEO_SPRITE_2 = (() => {
-  const R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
-        S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
-  return [
-    [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
-    [_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],
-    [_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
-    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
-    [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
-    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
-    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
-    [_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
-    [_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],
-    [_,_,_,Bd,Bd,Bd,_,_,_,Bd,Bd,Bd,_,_,_,_],
-    [_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_],
-    [_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_],
-  ];
-})();
-
-function spriteToCanvas(spriteData) {
-  const c = document.createElement('canvas');
-  c.width = 16; c.height = 16;
-  const cx = c.getContext('2d');
-  for (let y = 0; y < 16; y++)
-    for (let x = 0; x < 16; x++)
-      if (spriteData[y] && spriteData[y][x]) { cx.fillStyle = spriteData[y][x]; cx.fillRect(x, y, 1, 1); }
-  return c;
-}
-
-// Build agent sprite caches — Claude bots with props
-const agentSprites = AGENT_SPRITE_DATA.map(sd => ({
-  frame1: spriteToCanvas(addProps(claudeBase1(), sd.props)),
-  frame2: spriteToCanvas(addProps(claudeBase2(), sd.props)),
+// Pixel sprite fallbacks (used for Researcher which has no PNG)
+const agentPixelSprites=AGENT_PROPS.map(p=>({
+  frame1:spriteToCanvas(addProps(claudeBase1(),p)),
+  frame2:spriteToCanvas(addProps(claudeBase2(),p)),
 }));
-const ceoSprites = {
-  frame1: spriteToCanvas(CEO_SPRITE_1),
-  frame2: spriteToCanvas(CEO_SPRITE_2),
-};
+const ceoSprites={frame1:spriteToCanvas(CEO1),frame2:spriteToCanvas(CEO2)};
+const eggSprite=spriteToCanvas(makeEggSprite());
+const eggCrackedSprite=spriteToCanvas(makeEggCracked());
+
+// Load actual agent PNGs — keyed by agent name
+const AGENT_IMG_FILES={"BizOps":"agent-images/biz_op.png","Researcher":"agent-images/researcher.png","Designer":"agent-images/designer.png","Engineer":"agent-images/engineer.png","CEO":"agent-images/ceo.png"};
+const agentImages={};
+let imagesLoaded=0,imagesToLoad=Object.keys(AGENT_IMG_FILES).length;
+for(const[name,src]of Object.entries(AGENT_IMG_FILES)){
+  const img=new Image();img.src=src;
+  img.onload=()=>{agentImages[name]=img;imagesLoaded++;};
+  img.onerror=()=>{imagesLoaded++;}; // fallback to pixel sprite on error
+}
 
 // ═══════════════════════════════════════════
 // GAME STATE
 // ═══════════════════════════════════════════
-const player = {
-  x: 27, y: 15, px: 27*TILE, py: 15*TILE,
-  moving: false, dir: "down", frame: 0, moveTimer: 0,
-  targetX: 27, targetY: 15,
-};
+const player={x:25,y:10,px:25*TILE,py:10*TILE,moving:false,dir:"left",frame:0,moveTimer:0,targetX:25,targetY:10};
 
-const agents = AGENTS.map((a, i) => {
-  const z = ZONES[a.zone];
-  const homeX = z.x + 3 + Math.floor(Math.random() * (z.w - 6));
-  const homeY = z.y + 3 + Math.floor(Math.random() * (z.h - 6));
-  const tasks = AGENT_TASKS[a.name] || [];
-  const activeTask = tasks.find(t => t.status === "running") || tasks.find(t => t.status === "thinking") || null;
-  return {
-    ...a, index: i,
-    x: homeX, y: homeY, px: homeX*TILE, py: homeY*TILE,
-    homeX, homeY,
-    moving: false, dir: "down", frame: 0, moveTimer: 0,
-    targetX: homeX, targetY: homeY,
-    wanderTimer: 60 + Math.random() * 120, wanderRadius: 3,
-    tasks, activeTask,
-    thoughtBubbleTimer: 0,
-    // Simulated progress ticking
-    progressTick: Math.random() * 200,
+const agents=AGENTS.map((a,i)=>{
+  const ep=EGG_POS[a.name], wp=WORK_POS[a.name];
+  const tasks=AGENT_TASKS[a.name]||[];
+  const activeTask=tasks.find(t=>t.status==="running")||tasks.find(t=>t.status==="thinking")||null;
+  return{
+    ...a,index:i,
+    x:ep.x,y:ep.y,px:ep.x*TILE,py:ep.y*TILE,
+    eggX:ep.x,eggY:ep.y,workX:wp.x,workY:wp.y,
+    moving:false,dir:"down",frame:0,moveTimer:0,targetX:ep.x,targetY:ep.y,
+    wanderTimer:60+Math.random()*120,wanderRadius:2,
+    tasks,activeTask,progressTick:Math.random()*200,
+    // Egg lifecycle
+    state:"egg", // egg | hatching | walking_to_work | working | walking_to_egg
+    hatchTimer:0,hatchTriggered:false,reportedTask:null,
   };
 });
 
-const camera = { x: 0, y: 0 };
-const keys = {};
-
-// Dialog state
-const dialog = {
-  active: false, text: "", displayedChars: 0, charTimer: 0,
-  agentIndex: -1, phase: "typing", selectedOption: 0,
-};
-
-let currentZoneName = "", zoneNameTimer = 0, lastZoneKey = "";
-let activePhase = "discover";
-let gameTime = 0;
+const camera={x:0,y:0};
+const keys={};
+const dialog={active:false,text:"",displayedChars:0,charTimer:0,agentIndex:-1,phase:"typing",selectedOption:0};
+let currentZoneName="",zoneNameTimer=0,lastZoneKey="",activePhase="discover",gameTime=0;
+let discoverVisited=false;
 
 // ═══════════════════════════════════════════
 // INPUT
 // ═══════════════════════════════════════════
-window.addEventListener('keydown', e => {
-  keys[e.key] = true;
-  if (dialog.active) {
-    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); handleDialogInput(); }
-    if (e.key === 'Escape') closeDialog();
-    if (dialog.phase === "question") {
-      if (e.key === 'ArrowUp' || e.key === 'w') dialog.selectedOption = 0;
-      if (e.key === 'ArrowDown' || e.key === 's') dialog.selectedOption = 1;
+window.addEventListener('keydown',e=>{
+  keys[e.key]=true;
+  if(dialog.active){
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();handleDialogInput();}
+    if(e.key==='Escape')closeDialog();
+    if(dialog.phase==="question"){
+      if(e.key==='ArrowUp'||e.key==='w')dialog.selectedOption=0;
+      if(e.key==='ArrowDown'||e.key==='s')dialog.selectedOption=1;
     }
     return;
   }
-  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tryInteract(); }
-  if (e.key === 'Escape') closeDetailPanel();
+  if(scrollOpen){if(e.key==='Escape')closeScroll();return;}
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();tryInteract();}
+  if(e.key==='Escape')closeDetailPanel();
 });
-window.addEventListener('keyup', e => { keys[e.key] = false; });
+window.addEventListener('keyup',e=>{keys[e.key]=false;});
 
-function handleDialogInput() {
-  if (dialog.phase === "typing") {
-    dialog.displayedChars = dialog.text.length;
-    dialog.phase = "done";
-  } else if (dialog.phase === "done") {
-    dialog.phase = "question";
-    dialog.selectedOption = 0;
-  } else if (dialog.phase === "question") {
-    if (dialog.selectedOption === 0) { openDetailPanel(dialog.agentIndex); closeDialog(); }
+function handleDialogInput(){
+  if(dialog.phase==="typing"){dialog.displayedChars=dialog.text.length;dialog.phase="done";}
+  else if(dialog.phase==="done"){dialog.phase="question";dialog.selectedOption=0;}
+  else if(dialog.phase==="question"){
+    if(dialog.selectedOption===0){openDetailPanel(dialog.agentIndex);closeDialog();}
     else closeDialog();
   }
 }
-function closeDialog() { dialog.active = false; dialog.phase = "typing"; }
+function closeDialog(){dialog.active=false;dialog.phase="typing";}
 
-// ═══════════════════════════════════════════
-// INTERACTION
-// ═══════════════════════════════════════════
-function getFacingTile() {
-  let fx = player.x, fy = player.y;
-  if (player.dir === "up") fy--; if (player.dir === "down") fy++;
-  if (player.dir === "left") fx--; if (player.dir === "right") fx++;
-  return { x: fx, y: fy };
-}
-function getAdjacentAgent() {
-  const facing = getFacingTile();
-  for (let i = 0; i < agents.length; i++)
-    if (agents[i].x === facing.x && agents[i].y === facing.y) return i;
-  for (let i = 0; i < agents.length; i++) {
-    const dx = Math.abs(agents[i].x - player.x), dy = Math.abs(agents[i].y - player.y);
-    if (dx <= 1 && dy <= 1 && (dx+dy) <= 2) return i;
+function getAdjacentAgent(){
+  const fx=player.x+(player.dir==="right"?1:player.dir==="left"?-1:0);
+  const fy=player.y+(player.dir==="down"?1:player.dir==="up"?-1:0);
+  for(let i=0;i<agents.length;i++){
+    if(agents[i].state!=="working"&&agents[i].state!=="egg"&&agents[i].state!=="walking_to_egg")continue;
+    const dx=Math.abs(agents[i].x-player.x),dy=Math.abs(agents[i].y-player.y);
+    if(dx<=1&&dy<=1&&(dx+dy)<=2)return i;
   }
-  return -1;
+  return-1;
 }
 
-function tryInteract() {
-  const idx = getAdjacentAgent();
-  if (idx === -1) return;
-  const a = agents[idx];
-  // Show current task in greeting
-  const taskStr = a.activeTask
-    ? `I'm working on: "${a.activeTask.name}" (${a.activeTask.status}). ${a.activeTask.detail}`
-    : `I'm idle right now. My skills: ${a.skills.map(s=>"/"+s).join(", ")}`;
-  dialog.active = true;
-  dialog.text = `${a.name}: ${taskStr}`;
-  dialog.displayedChars = 0; dialog.charTimer = 0;
-  dialog.agentIndex = idx; dialog.phase = "typing"; dialog.selectedOption = 0;
+function tryInteract(){
+  const idx=getAdjacentAgent();if(idx===-1)return;
+  const a=agents[idx];
+  if(a.state==="egg"){
+    dialog.active=true;
+    dialog.text=`A dormant egg... ${a.name} is resting. No active tasks right now.`;
+    dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
+    return;
+  }
+  const taskStr=a.activeTask?`I'm working on: "${a.activeTask.name}" (${a.activeTask.status}). ${a.activeTask.detail}`:`Idle. Skills: ${a.skills.map(s=>"/"+s).join(", ")}`;
+  dialog.active=true;dialog.text=`${a.name}: ${taskStr}`;
+  dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
 }
 
 // ═══════════════════════════════════════════
-// DETAIL PANEL (Task-focused)
+// DETAIL PANEL
 // ═══════════════════════════════════════════
-function openDetailPanel(agentIdx) {
-  const a = agents[agentIdx];
-  const badge = document.getElementById('dp-badge');
-  badge.textContent = a.model.toUpperCase();
-  badge.style.background = a.color + "25";
-  badge.style.color = a.color;
-  document.getElementById('dp-title').textContent = a.name;
-
-  let html = '';
-
-  // Agent info section
-  html += '<div class="dp-section">';
-  html += '<div class="dp-section-title">Agent Info</div>';
-  html += `<div class="dp-info-row"><span class="dp-info-label">Role</span><span class="dp-info-value">${a.desc}</span></div>`;
-  html += `<div class="dp-info-row"><span class="dp-info-label">Zone</span><span class="dp-info-value">${ZONE_NAMES[a.zone]}</span></div>`;
-  html += '<div style="margin-top:6px">';
-  a.skills.forEach(s => { html += `<span class="dp-tag dp-tag-skill">/${s}</span>`; });
-  a.mcps.forEach(m => { html += `<span class="dp-tag dp-tag-mcp">${m}</span>`; });
-  html += '</div>';
-  const myTeams = TEAMS.filter(t => t.members.includes(a.name));
-  if (myTeams.length) {
-    html += '<div style="margin-top:6px">';
-    myTeams.forEach(t => { html += `<span class="dp-tag dp-tag-team">${t.name}</span>`; });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  // TASKS section
-  html += '<div class="dp-section">';
-  html += '<div class="dp-section-title">Current Tasks</div>';
-  if (a.tasks.length === 0) {
-    html += '<div style="color:#475569;padding:8px 0">No active tasks</div>';
-  } else {
-    a.tasks.forEach(t => {
-      const statusIcons = { running: "⟳", thinking: "◆", done: "✓", queued: "○" };
-      const barColors = { running: "#fbbf24", thinking: "#8b5cf6", done: "#22c55e", queued: "#475569" };
-      html += `<div class="task-item ${t.status}">`;
-      html += `<div class="task-status ${t.status}">${statusIcons[t.status]} ${t.status}</div>`;
-      html += `<div class="task-name">${t.name}</div>`;
-      html += `<div class="task-detail">${t.detail}</div>`;
-      if (t.status !== "done" && t.status !== "queued") {
-        html += `<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${barColors[t.status]}"></div></div>`;
-      }
-      html += '</div>';
-    });
-  }
-  html += '</div>';
-
-  document.getElementById('dp-body').innerHTML = html;
+function openDetailPanel(idx){
+  const a=agents[idx];
+  document.getElementById('dp-badge').textContent=a.model.toUpperCase();
+  document.getElementById('dp-badge').style.cssText=`background:${a.color}25;color:${a.color};font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;border-radius:4px;margin-right:10px;font-weight:700;font-family:monospace`;
+  document.getElementById('dp-title').textContent=a.name;
+  let h='<div class="dp-section"><div class="dp-section-title">Agent Info</div>';
+  h+=`<div class="dp-info-row"><span class="dp-info-label">Role</span><span class="dp-info-value">${a.desc}</span></div>`;
+  h+=`<div class="dp-info-row"><span class="dp-info-label">Zone</span><span class="dp-info-value">${ZONE_NAMES[a.zone]}</span></div>`;
+  h+=`<div class="dp-info-row"><span class="dp-info-label">State</span><span class="dp-info-value">${a.state}</span></div>`;
+  h+='<div style="margin-top:6px">';a.skills.forEach(s=>{h+=`<span class="dp-tag dp-tag-skill">/${s}</span>`;});
+  a.mcps.forEach(m=>{h+=`<span class="dp-tag dp-tag-mcp">${m}</span>`;});h+='</div></div>';
+  h+='<div class="dp-section"><div class="dp-section-title">Tasks</div>';
+  a.tasks.forEach(t=>{
+    const icons={running:"⟳",thinking:"◆",done:"✓"};
+    const colors={running:"#fbbf24",thinking:"#8b5cf6",done:"#22c55e"};
+    h+=`<div class="task-item ${t.status}"><div class="task-status ${t.status}">${icons[t.status]||"○"} ${t.status}</div>`;
+    h+=`<div class="task-name">${t.name}</div><div class="task-detail">${t.detail}</div>`;
+    if(t.status!=="done")h+=`<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${colors[t.status]}"></div></div>`;
+    h+='</div>';
+  });
+  h+='</div>';
+  document.getElementById('dp-body').innerHTML=h;
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('detail-scrim').classList.add('open');
 }
+function closeDetailPanel(){document.getElementById('detail-panel').classList.remove('open');document.getElementById('detail-scrim').classList.remove('open');}
+document.getElementById('dp-close').addEventListener('click',closeDetailPanel);
+document.getElementById('detail-scrim').addEventListener('click',closeDetailPanel);
 
-function closeDetailPanel() {
-  document.getElementById('detail-panel').classList.remove('open');
-  document.getElementById('detail-scrim').classList.remove('open');
+// ═══════════════════════════════════════════
+// SCROLL — Agent findings report
+// ═══════════════════════════════════════════
+let scrollOpen=false, scrollAgentName="";
+const scrollScrim=document.getElementById('scroll-scrim');
+const scrollBody=document.getElementById('scroll-body');
+const scrollRetryInput=document.getElementById('scroll-retry-input');
+
+function openScroll(agentName){
+  const f=AGENT_FINDINGS[agentName]; if(!f)return;
+  scrollAgentName=agentName;
+  const agent=AGENTS.find(a=>a.name===agentName);
+  let h=`<div class="scroll-from">Report from ${agentName}</div>`;
+  h+=`<div class="scroll-title">${f.title}</div>`;
+  for(const item of f.findings){
+    h+=`<div class="scroll-finding"><b>${item.label}:</b> ${item.text}</div>`;
+  }
+  scrollBody.innerHTML=h;
+  scrollRetryInput.classList.remove('show');
+  scrollRetryInput.value='';
+  scrollScrim.classList.add('open');
+  scrollOpen=true;
 }
-document.getElementById('dp-close').addEventListener('click', closeDetailPanel);
-document.getElementById('detail-scrim').addEventListener('click', closeDetailPanel);
+function closeScroll(){
+  scrollScrim.classList.remove('open');
+  scrollOpen=false;scrollAgentName="";
+}
+// NEXT — accept findings, agent returns to egg
+document.getElementById('scroll-next').addEventListener('click',()=>{
+  const a=agents.find(ag=>ag.name===scrollAgentName);
+  if(a){
+    // Mark running task as done
+    a.tasks.forEach(t=>{if(t.status==="running"){t.status="done";t.progress=100;}});
+    a.activeTask=a.tasks.find(t=>t.status==="thinking")||null;
+    // Return to egg
+    a.state="walking_to_egg";a.targetX=a.eggX;a.targetY=a.eggY;a.moving=true;a.moveTimer=0;
+  }
+  closeScroll();
+});
+// RETRY — show text input, then reset task
+document.getElementById('scroll-retry').addEventListener('click',()=>{
+  const input=scrollRetryInput;
+  if(!input.classList.contains('show')){input.classList.add('show');input.focus();return;}
+  // Retry: reset task, clear findings so a fresh API call fires
+  const retryName=scrollAgentName;
+  const a=agents.find(ag=>ag.name===retryName);
+  if(a){
+    const runningTask=a.tasks.find(t=>t.status==="done"&&t.progress===100)||a.tasks.find(t=>t.status==="running");
+    if(runningTask){runningTask.progress=10;runningTask.status="running";a.activeTask=runningTask;}
+    a.reportedTask=null;
+    delete AGENT_FINDINGS[retryName]; // force new API call
+    fetchAgentFindings(retryName);
+  }
+  input.classList.remove('show');input.value='';
+  closeScroll();
+});
+// ESC closes scroll too
+scrollScrim.addEventListener('click',(e)=>{if(e.target===scrollScrim)closeScroll();});
 
 // ═══════════════════════════════════════════
 // MOVEMENT
 // ═══════════════════════════════════════════
-const MOVE_SPEED = 2;
-
-function updatePlayer() {
-  if (dialog.active) return;
-  if (player.moving) {
-    const tx = player.targetX*TILE, ty = player.targetY*TILE;
-    const dx = tx - player.px, dy = ty - player.py;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    if (dist < MOVE_SPEED) {
-      player.px = tx; player.py = ty;
-      player.x = player.targetX; player.y = player.targetY;
-      player.moving = false; player.frame = 0;
-    } else {
-      player.px += (dx/dist)*MOVE_SPEED; player.py += (dy/dist)*MOVE_SPEED;
-      player.moveTimer++; player.frame = Math.floor(player.moveTimer/8)%2;
-    }
+const MOVE_SPEED=2;
+function updatePlayer(){
+  if(dialog.active||scrollOpen)return;
+  if(player.moving){
+    const tx=player.targetX*TILE,ty=player.targetY*TILE,dx=tx-player.px,dy=ty-player.py;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<MOVE_SPEED){player.px=tx;player.py=ty;player.x=player.targetX;player.y=player.targetY;player.moving=false;player.frame=0;}
+    else{player.px+=(dx/dist)*MOVE_SPEED;player.py+=(dy/dist)*MOVE_SPEED;player.moveTimer++;player.frame=Math.floor(player.moveTimer/8)%2;}
     return;
   }
-  let dx = 0, dy = 0, dir = player.dir;
-  if (keys['ArrowUp']||keys['w']||keys['W']) { dy=-1; dir="up"; }
-  else if (keys['ArrowDown']||keys['s']||keys['S']) { dy=1; dir="down"; }
-  else if (keys['ArrowLeft']||keys['a']||keys['A']) { dx=-1; dir="left"; }
-  else if (keys['ArrowRight']||keys['d']||keys['D']) { dx=1; dir="right"; }
-  player.dir = dir;
-  if (dx !== 0 || dy !== 0) {
-    const nx = player.x+dx, ny = player.y+dy;
-    if (!isBlocked(nx, ny) && !agents.some(a => a.x === nx && a.y === ny)) {
-      player.targetX = nx; player.targetY = ny;
-      player.moving = true; player.moveTimer = 0;
+  let dx=0,dy=0,dir=player.dir;
+  if(keys['ArrowUp']||keys['w']||keys['W']){dy=-1;dir="up";}
+  else if(keys['ArrowDown']||keys['s']||keys['S']){dy=1;dir="down";}
+  else if(keys['ArrowLeft']||keys['a']||keys['A']){dx=-1;dir="left";}
+  else if(keys['ArrowRight']||keys['d']||keys['D']){dx=1;dir="right";}
+  player.dir=dir;
+  if(dx||dy){
+    const nx=player.x+dx,ny=player.y+dy;
+    if(!isBlocked(nx,ny)&&!agents.some(a=>a.state==="working"&&a.x===nx&&a.y===ny)){
+      player.targetX=nx;player.targetY=ny;player.moving=true;player.moveTimer=0;
     }
   }
 }
 
 // ═══════════════════════════════════════════
-// AGENT AI
+// AGENT AI — Egg lifecycle
 // ═══════════════════════════════════════════
-function updateAgents() {
-  for (const a of agents) {
-    // Tick simulated progress
-    a.progressTick++;
-    if (a.progressTick > 60) {
-      a.progressTick = 0;
-      a.tasks.forEach(t => {
-        if (t.status === "running" && t.progress < 95) t.progress += Math.random() * 3;
-        if (t.status === "thinking" && t.progress < 80) t.progress += Math.random() * 2;
-      });
-    }
+function updateAgents(){
+  // Trigger hatching when CEO enters discover zone
+  const ceoZone=getZoneKeyAt(player.x,player.y);
+  if(ceoZone&&!discoverVisited){
+    discoverVisited=true;
+  }
 
-    if (a.moving) {
-      const tx = a.targetX*TILE, ty = a.targetY*TILE;
-      const dx = tx - a.px, dy = ty - a.py;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 1.5) {
-        a.px = tx; a.py = ty; a.x = a.targetX; a.y = a.targetY;
-        a.moving = false; a.frame = 0;
-        a.wanderTimer = 90 + Math.random()*150;
-      } else {
-        a.px += (dx/dist)*1.2; a.py += (dy/dist)*1.2;
-        a.moveTimer++; a.frame = Math.floor(a.moveTimer/10)%2;
+  for(const a of agents){
+    // Progress tick
+    a.progressTick++;
+    if(a.progressTick>60){a.progressTick=0;a.tasks.forEach(t=>{
+      if(t.status==="running"&&t.progress<95)t.progress+=Math.random()*3;
+      if(t.status==="thinking"&&t.progress<80)t.progress+=Math.random()*2;
+    });}
+
+    const inZone=getZoneKeyAt(player.x,player.y)===a.zone;
+
+    // State machine
+    if(a.state==="egg"){
+      if(inZone&&a.activeTask&&!a.hatchTriggered){
+        a.hatchTriggered=true;a.state="hatching";a.hatchTimer=0;
       }
-    } else {
-      a.wanderTimer--;
-      if (a.wanderTimer <= 0) {
-        const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
-        const d = dirs[Math.floor(Math.random()*4)];
-        const nx = a.x+d[0], ny = a.y+d[1];
-        const dfh = Math.abs(nx-a.homeX) + Math.abs(ny-a.homeY);
-        if (!isBlocked(nx,ny) && dfh <= a.wanderRadius &&
-            !(nx===player.x && ny===player.y) &&
-            !agents.some(o => o!==a && o.x===nx && o.y===ny)) {
-          a.targetX = nx; a.targetY = ny; a.moving = true; a.moveTimer = 0;
-          if (d[0]<0) a.dir="left"; else if (d[0]>0) a.dir="right";
-          else if (d[1]<0) a.dir="up"; else a.dir="down";
-        } else {
-          a.wanderTimer = 30 + Math.random()*60;
-          a.dir = ["up","down","left","right"][Math.floor(Math.random()*4)];
+    }
+    else if(a.state==="hatching"){
+      a.hatchTimer++;
+      if(a.hatchTimer>80){
+        a.state="walking_to_work";
+        a.targetX=a.workX;a.targetY=a.workY;a.moving=true;a.moveTimer=0;
+      }
+    }
+    else if(a.state==="walking_to_work"){
+      // Move toward workstation
+      if(!a.moving){
+        if(a.x===a.workX&&a.y===a.workY){a.state="working";a.wanderTimer=60+Math.random()*120;
+          // Fire real API call
+          if(!AGENT_FINDINGS[a.name]) fetchAgentFindings(a.name);
+        }
+        else{
+          // Simple pathfinding: move one step closer
+          const dx=Math.sign(a.workX-a.x),dy=Math.sign(a.workY-a.y);
+          let nx=a.x+dx,ny=a.y+dy;
+          if(!isBlocked(nx,ny)){a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
+            if(dx<0)a.dir="left";else if(dx>0)a.dir="right";else if(dy<0)a.dir="up";else a.dir="down";
+          }else{// Try just horizontal or vertical
+            if(dx&&!isBlocked(a.x+dx,a.y)){a.targetX=a.x+dx;a.targetY=a.y;a.moving=true;a.moveTimer=0;a.dir=dx<0?"left":"right";}
+            else if(dy&&!isBlocked(a.x,a.y+dy)){a.targetX=a.x;a.targetY=a.y+dy;a.moving=true;a.moveTimer=0;a.dir=dy<0?"up":"down";}
+          }
         }
       }
+    }
+    else if(a.state==="working"){
+      // Check if running task hit >=95% — trigger scroll report
+      if(!a.reportedTask&&a.activeTask&&a.activeTask.status==="running"&&a.activeTask.progress>=95&&AGENT_FINDINGS[a.name]&&!scrollOpen){
+        a.reportedTask=a.activeTask;
+        openScroll(a.name);
+      }
+      // Wander near workstation
+      a.wanderTimer--;
+      if(a.wanderTimer<=0&&!a.moving){
+        const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+        const d=dirs[Math.floor(Math.random()*4)];
+        const nx=a.x+d[0],ny=a.y+d[1];
+        const dfh=Math.abs(nx-a.workX)+Math.abs(ny-a.workY);
+        if(!isBlocked(nx,ny)&&dfh<=a.wanderRadius&&!(nx===player.x&&ny===player.y)){
+          a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
+          if(d[0]<0)a.dir="left";else if(d[0]>0)a.dir="right";else if(d[1]<0)a.dir="up";else a.dir="down";
+        }else a.wanderTimer=30+Math.random()*60;
+      }
+    }
+    else if(a.state==="walking_to_egg"){
+      // Walk back to egg position
+      if(!a.moving){
+        if(a.x===a.eggX&&a.y===a.eggY){
+          a.state="egg";a.hatchTriggered=false; // back to dormant egg
+        }else{
+          const dx=Math.sign(a.eggX-a.x),dy=Math.sign(a.eggY-a.y);
+          let nx=a.x+dx,ny=a.y+dy;
+          if(!isBlocked(nx,ny)){a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
+            if(dx<0)a.dir="left";else if(dx>0)a.dir="right";else if(dy<0)a.dir="up";else a.dir="down";
+          }else{
+            if(dx&&!isBlocked(a.x+dx,a.y)){a.targetX=a.x+dx;a.targetY=a.y;a.moving=true;a.moveTimer=0;a.dir=dx<0?"left":"right";}
+            else if(dy&&!isBlocked(a.x,a.y+dy)){a.targetX=a.x;a.targetY=a.y+dy;a.moving=true;a.moveTimer=0;a.dir=dy<0?"up":"down";}
+          }
+        }
+      }
+    }
+
+    // Movement interpolation (shared for all moving states)
+    if(a.moving){
+      const tx=a.targetX*TILE,ty=a.targetY*TILE,dx=tx-a.px,dy=ty-a.py;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<1.5){a.px=tx;a.py=ty;a.x=a.targetX;a.y=a.targetY;a.moving=false;a.frame=0;
+        if(a.state==="working")a.wanderTimer=90+Math.random()*150;
+      }else{a.px+=(dx/dist)*1.5;a.py+=(dy/dist)*1.5;a.moveTimer++;a.frame=Math.floor(a.moveTimer/10)%2;}
     }
   }
 }
@@ -779,374 +805,228 @@ function updateAgents() {
 // ═══════════════════════════════════════════
 // CAMERA
 // ═══════════════════════════════════════════
-function updateCamera() {
-  const tx = player.px*SCALE - canvas.width/2 + TS/2;
-  const ty = player.py*SCALE - canvas.height/2 + TS/2;
-  camera.x += (tx - camera.x) * 0.1;
-  camera.y += (ty - camera.y) * 0.1;
-  const maxX = WORLD_W*SCALE - canvas.width;
-  const maxY = WORLD_H*SCALE - canvas.height;
-  camera.x = Math.max(0, Math.min(maxX, camera.x));
-  camera.y = Math.max(0, Math.min(maxY, camera.y));
+function updateCamera(){
+  const tx=player.px*SCALE-canvas.width/2+TS/2,ty=player.py*SCALE-canvas.height/2+TS/2;
+  camera.x+=(tx-camera.x)*0.1;camera.y+=(ty-camera.y)*0.1;
+  camera.x=Math.max(0,Math.min(WORLD_W*SCALE-canvas.width,camera.x));
+  camera.y=Math.max(0,Math.min(WORLD_H*SCALE-canvas.height,camera.y));
 }
-
-function updateZoneDetection() {
-  let found = "";
-  for (const [key, z] of Object.entries(ZONES))
-    if (player.x >= z.x && player.x < z.x+z.w && player.y >= z.y && player.y < z.y+z.h) { found = key; break; }
-  if (found && found !== lastZoneKey) {
-    currentZoneName = ZONE_NAMES[found] || found;
-    zoneNameTimer = 120; activePhase = found;
-  }
-  lastZoneKey = found;
-  if (zoneNameTimer > 0) zoneNameTimer--;
+function updateZoneDetection(){
+  let found="";
+  for(const[k,z]of Object.entries(ZONES))if(player.x>=z.x&&player.x<z.x+z.w&&player.y>=z.y&&player.y<z.y+z.h){found=k;break;}
+  if(found&&found!==lastZoneKey){currentZoneName=ZONE_NAMES[found]||found;zoneNameTimer=120;activePhase=found;}
+  lastZoneKey=found;if(zoneNameTimer>0)zoneNameTimer--;
 }
 
 // ═══════════════════════════════════════════
 // DRAWING
 // ═══════════════════════════════════════════
-function drawTile(x, y) {
-  const sx = x*TS - camera.x, sy = y*TS - camera.y;
-  if (sx+TS < 0 || sy+TS < 0 || sx > canvas.width || sy > canvas.height) return;
-  const t = map[y][x];
+function drawTile(x,y){
+  const sx=x*TS-camera.x,sy=y*TS-camera.y;
+  if(sx+TS<0||sy+TS<0||sx>canvas.width||sy>canvas.height)return;
+  const t=map[y][x];
+  if(t===0){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);}
+  else if(t===1){ctx.fillStyle=(x+y)%2===0?PATH1:PATH2;ctx.fillRect(sx,sy,TS,TS);}
+  else if(t===2){const w=Math.sin(gameTime*0.03+x*0.5+y*0.3)*0.5+0.5;ctx.fillStyle=w>0.5?WATER1:WATER2;ctx.fillRect(sx,sy,TS,TS);
+    if(Math.sin(gameTime*0.05+x*2+y*3)>0.9){ctx.fillStyle="rgba(255,255,255,0.4)";ctx.fillRect(sx+TS/3,sy+TS/4,TS/5,TS/5);}}
+  else if(t===3){const z=getZoneAt(x,y);if(z){ctx.fillStyle=z===ZONES[activePhase]?z.color+"20":z.color+"10";ctx.fillRect(sx,sy,TS,TS);}
+    else{ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);}}
+  else if(t===4){const z=getZoneAt(x,y);if(z){ctx.fillStyle=z===ZONES[activePhase]?z.color+"45":z.color+"20";ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle=z===ZONES[activePhase]?z.color+"65":z.color+"35";ctx.fillRect(sx+2,sy+2,TS-4,TS-4);}}
+  else if(t===5){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
+    const fc=FLOWER_COLORS[(x*7+y*13)%FLOWER_COLORS.length];const bob=Math.sin(gameTime*0.02+x+y)*2;
+    ctx.fillStyle=fc;ctx.fillRect(sx+TS/2-4,sy+TS/3+bob,8,8);ctx.fillStyle="#4a7c3f";ctx.fillRect(sx+TS/2-1,sy+TS/3+8+bob,3,10);}
+  else if(t===6){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#5a3a1e";ctx.fillRect(sx+TS/2-3,sy+TS/2,6,TS/2);
+    ctx.fillStyle="#2d6a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS/2-2);ctx.fillStyle="#3a8c2a";ctx.fillRect(sx+8,sy,TS-16,TS/3);}
+  else if(t===7){ctx.fillStyle=(x+y)%2===0?LAB_FL:LAB_FL2;ctx.fillRect(sx,sy,TS,TS);ctx.strokeStyle="#60708040";ctx.strokeRect(sx,sy,TS,TS);}
+  else if(t===8){ctx.fillStyle=LAB_EQ;ctx.fillRect(sx,sy,TS,TS);
+    // Vial/bubbling
+    ctx.fillStyle="#60d0a0";const bubY=Math.sin(gameTime*0.06+x)*3;ctx.fillRect(sx+TS/2-3,sy+TS/3+bubY,6,8);
+    ctx.fillStyle="#40b080";ctx.fillRect(sx+TS/2-1,sy+TS/4+bubY,3,4);}
+  else if(t===9){ctx.fillStyle=(x+y)%2===0?STORE_FL:STORE_FL2;ctx.fillRect(sx,sy,TS,TS);}
+  else if(t===10){ctx.fillStyle=STORE_SH;ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle=STORE_SH2;ctx.fillRect(sx+3,sy+4,TS-6,TS/3);
+    ctx.fillRect(sx+3,sy+TS/2+2,TS-6,TS/3);}
+  else if(t===11){ctx.fillStyle="#1a4a12";ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle="#2d5a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS-8);}
+}
 
-  if (t === 0) {
-    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
-    ctx.fillRect(sx, sy, TS, TS);
-  } else if (t === 1) {
-    ctx.fillStyle = (x+y)%2===0 ? PATH1 : PATH2;
-    ctx.fillRect(sx, sy, TS, TS);
-  } else if (t === 2) {
-    const wave = Math.sin(gameTime*0.03 + x*0.5 + y*0.3)*0.5+0.5;
-    ctx.fillStyle = wave > 0.5 ? WATER1 : WATER2;
-    ctx.fillRect(sx, sy, TS, TS);
-    if (Math.sin(gameTime*0.05 + x*2 + y*3) > 0.9) {
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.fillRect(sx+TS/3, sy+TS/4, TS/5, TS/5);
-    }
-  } else if (t === 3) {
-    const z = getZoneAt(x, y);
-    if (z) {
-      ctx.fillStyle = z === ZONES[activePhase] ? z.color+"25" : z.color+"12";
-      ctx.fillRect(sx, sy, TS, TS);
-      ctx.strokeStyle = z.color+"15"; ctx.strokeRect(sx, sy, TS, TS);
-    } else {
-      ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
-      ctx.fillRect(sx, sy, TS, TS);
-    }
-  } else if (t === 4) {
-    const z = getZoneAt(x, y);
-    if (z) {
-      const isActive = z === ZONES[activePhase];
-      ctx.fillStyle = isActive ? z.color+"50" : z.color+"25";
-      ctx.fillRect(sx, sy, TS, TS);
-      // Inner border pattern
-      ctx.fillStyle = isActive ? z.color+"70" : z.color+"40";
-      ctx.fillRect(sx+2, sy+2, TS-4, TS-4);
-    }
-  } else if (t === 5) {
-    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
-    ctx.fillRect(sx, sy, TS, TS);
-    const fc = FLOWER_COLORS[(x*7+y*13)%FLOWER_COLORS.length];
-    const bob = Math.sin(gameTime*0.02+x+y)*2;
-    ctx.fillStyle = fc; ctx.fillRect(sx+TS/2-4, sy+TS/3+bob, 8, 8);
-    ctx.fillStyle = "#4a7c3f"; ctx.fillRect(sx+TS/2-1, sy+TS/3+8+bob, 3, 10);
-  } else if (t === 6) {
-    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
-    ctx.fillRect(sx, sy, TS, TS);
-    ctx.fillStyle = "#6b4226"; ctx.fillRect(sx+TS/2-4, sy+TS/2, 8, TS/2);
-    ctx.fillStyle = "#2d6a1e"; ctx.fillRect(sx+4, sy+2, TS-8, TS/2);
-    ctx.fillStyle = "#3a8c2a"; ctx.fillRect(sx+8, sy-2, TS-16, TS/3);
+function drawSprite(sc,px,py){const sx=px*SCALE-camera.x,sy=py*SCALE-camera.y;ctx.drawImage(sc,sx,sy,TS,TS);}
+// Draw agent PNG image — larger and offset so feet align with tile
+function drawAgentImage(img,px,py){
+  const sz=TS*1.6; // render at 1.6x tile size for detail
+  const sx=px*SCALE-camera.x+TS/2-sz/2, sy=py*SCALE-camera.y+TS-sz; // anchor feet to bottom of tile
+  ctx.drawImage(img,sx,sy,sz,sz);
+}
+
+function drawZoneLabels(){
+  ctx.font="bold 14px monospace";ctx.textAlign="center";
+  for(const[k,z]of Object.entries(ZONES)){
+    const sx=(z.x+z.w/2)*TS-camera.x,sy=z.y*TS-camera.y-8;
+    if(sx<-200||sx>canvas.width+200||sy<-50||sy>canvas.height+50)continue;
+    ctx.fillStyle=k===activePhase?z.color:z.color+"80";
+    ctx.fillText(ZONE_NAMES[k].toUpperCase(),sx,sy);
   }
 }
 
-function drawSprite(spriteCanvas, px, py) {
-  const sx = px*SCALE - camera.x, sy = py*SCALE - camera.y;
-  ctx.drawImage(spriteCanvas, sx, sy, TS, TS);
-}
-
-function drawZoneLabels() {
-  ctx.font = "bold 14px monospace"; ctx.textAlign = "center";
-  for (const [key, z] of Object.entries(ZONES)) {
-    const sx = (z.x + z.w/2)*TS - camera.x;
-    const sy = z.y*TS - camera.y - 8;
-    if (sx < -200 || sx > canvas.width+200 || sy < -50 || sy > canvas.height+50) continue;
-    const isActive = key === activePhase;
-    ctx.fillStyle = isActive ? z.color : z.color+"80";
-    ctx.fillText(ZONE_NAMES[key].toUpperCase(), sx, sy);
-    if (isActive) {
-      ctx.fillStyle = z.color+"40";
-      ctx.fillRect(sx-40, sy+4, 80, 3);
-    }
+function drawThoughtBubbles(){
+  for(const a of agents){
+    if(a.state!=="working"||!a.activeTask)continue;
+    const sx=a.px*SCALE-camera.x+TS/2,sy=a.py*SCALE-camera.y-8;
+    if(sx<-100||sx>canvas.width+100||sy<-50||sy>canvas.height+50)continue;
+    const isThinking=a.activeTask.status==="thinking";
+    const bubbleColor=isThinking?"#8b5cf6":"#fbbf24";
+    const floatY=Math.sin(gameTime*0.04+a.index*2)*3;
+    ctx.fillStyle=bubbleColor+"60";
+    ctx.beginPath();ctx.arc(sx-2,sy+floatY+4,2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(sx-6,sy+floatY-2,3,0,Math.PI*2);ctx.fill();
+    const bw=120,bh=20,bx=sx-bw/2,by=sy-bh-6+floatY;
+    ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(bx,by,bw,bh,4);ctx.fill();
+    ctx.strokeStyle=bubbleColor+"60";ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=bubbleColor;ctx.font="bold 8px monospace";ctx.textAlign="left";
+    if(isThinking){ctx.fillText("◆"+".".repeat(1+Math.floor(gameTime/20)%3),bx+4,by+13);}
+    else{const sc=["⟳","◐","◑","◒"];ctx.fillText(sc[Math.floor(gameTime/15)%4],bx+4,by+13);}
+    ctx.fillStyle="#cbd5e1";ctx.font="8px monospace";
+    let tn=a.activeTask.name;if(tn.length>14)tn=tn.substring(0,13)+"…";
+    ctx.fillText(tn,bx+16,by+13);
   }
 }
 
-// ═══════════════════════════════════════════
-// THOUGHT BUBBLES (above agents)
-// ═══════════════════════════════════════════
-function drawThoughtBubbles() {
-  for (const a of agents) {
-    if (!a.activeTask) continue;
-    const sx = a.px*SCALE - camera.x + TS/2;
-    const sy = a.py*SCALE - camera.y - 8;
+function drawInteractionPrompt(){
+  if(dialog.active)return;const idx=getAdjacentAgent();if(idx===-1)return;
+  const a=agents[idx];
+  const sx=a.px*SCALE-camera.x+TS/2,sy=a.py*SCALE-camera.y-(a.state==="working"?40:16);
+  const pulse=0.7+Math.sin(gameTime*0.08)*0.3;ctx.globalAlpha=pulse;
+  ctx.fillStyle="rgba(0,0,0,0.8)";ctx.beginPath();ctx.roundRect(sx-31,sy-22,62,22,4);ctx.fill();
+  ctx.fillStyle="#fbbf24";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("[SPACE]",sx,sy-6);
+  ctx.globalAlpha=1;
+}
 
-    // Skip if off screen
-    if (sx < -100 || sx > canvas.width+100 || sy < -50 || sy > canvas.height+50) continue;
-
-    const isThinking = a.activeTask.status === "thinking";
-    const isRunning = a.activeTask.status === "running";
-    const bubbleColor = isThinking ? "#8b5cf6" : "#fbbf24";
-    const bgColor = isThinking ? "rgba(139,92,246,0.15)" : "rgba(251,191,36,0.15)";
-
-    // Floating animation
-    const floatY = Math.sin(gameTime * 0.04 + a.index * 2) * 3;
-
-    // Small dots leading up
-    ctx.fillStyle = bubbleColor + "60";
-    ctx.beginPath(); ctx.arc(sx - 2, sy + floatY + 4, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(sx - 6, sy + floatY - 2, 3, 0, Math.PI*2); ctx.fill();
-
-    // Main bubble
-    const bw = 120, bh = 20;
-    const bx = sx - bw/2, by = sy - bh - 6 + floatY;
-
-    // Background
-    ctx.fillStyle = "rgba(10,15,30,0.88)";
-    ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, 4);
-    ctx.fill();
-    ctx.strokeStyle = bubbleColor + "60";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Status icon (animated dots for thinking, spinner for running)
-    ctx.fillStyle = bubbleColor;
-    ctx.font = "bold 8px monospace"; ctx.textAlign = "left";
-    if (isThinking) {
-      const dots = ".".repeat(1 + Math.floor(gameTime/20)%3);
-      ctx.fillText("◆" + dots, bx+4, by+13);
-    } else {
-      const spinChars = ["⟳","◐","◑","◒"];
-      ctx.fillText(spinChars[Math.floor(gameTime/15)%4], bx+4, by+13);
-    }
-
-    // Task name (truncated)
-    ctx.fillStyle = "#cbd5e1";
-    ctx.font = "8px monospace";
-    let taskName = a.activeTask.name;
-    if (taskName.length > 14) taskName = taskName.substring(0, 13) + "…";
-    ctx.fillText(taskName, bx+16, by+13);
+function drawDialog(){
+  if(!dialog.active)return;
+  const boxH=130,boxY=canvas.height-boxH-16,boxX=30,boxW=canvas.width-60;
+  ctx.fillStyle="rgba(10,15,30,0.94)";ctx.beginPath();ctx.roundRect(boxX,boxY,boxW,boxH,8);ctx.fill();
+  const a=agents[dialog.agentIndex];
+  ctx.strokeStyle=a?a.color+"80":"#60a5fa";ctx.lineWidth=2;ctx.stroke();
+  if(dialog.agentIndex>=0){
+    const ag=agents[dialog.agentIndex],ps=56,px=boxX+14,py=boxY+(boxH-ps)/2;
+    ctx.fillStyle="#0f172a";ctx.fillRect(px,py,ps,ps);
+    if(ag.state==="egg"){ctx.drawImage(eggSprite,px+4,py+4,48,48);}
+    else if(agentImages[ag.name]){ctx.drawImage(agentImages[ag.name],px+4,py+4,48,48);}
+    else{ctx.drawImage(agentPixelSprites[dialog.agentIndex].frame1,px+4,py+4,48,48);}
+    ctx.strokeStyle=ag.color+"80";ctx.lineWidth=1;ctx.strokeRect(px,py,ps,ps);
+  }
+  const textX=boxX+84,textY=boxY+28,maxWidth=boxW-100;
+  if(dialog.phase==="question"){
+    ctx.fillStyle="#e2e8f0";ctx.font="12px monospace";ctx.textAlign="left";
+    ctx.fillText("View full task list?",textX,boxY+28);
+    const opts=["Yes, show details","No thanks"];
+    for(let i=0;i<opts.length;i++){const sel=dialog.selectedOption===i;ctx.fillStyle=sel?"#fbbf24":"#64748b";ctx.font=(sel?"bold ":"")+"12px monospace";ctx.fillText((sel?"> ":"  ")+opts[i],textX+8,boxY+50+i*20);}
+  } else {
+    if(dialog.phase==="typing"){dialog.charTimer++;if(dialog.charTimer>=1){dialog.charTimer=0;dialog.displayedChars=Math.min(dialog.displayedChars+1,dialog.text.length);if(dialog.displayedChars>=dialog.text.length)dialog.phase="done";}}
+    ctx.fillStyle="#e2e8f0";ctx.font="12px monospace";ctx.textAlign="left";
+    const words=dialog.text.substring(0,dialog.displayedChars).split(' ');let line='',lineY=textY;
+    for(const word of words){const test=line+word+' ';if(ctx.measureText(test).width>maxWidth&&line.length>0){ctx.fillText(line,textX,lineY);line=word+' ';lineY+=16;}else line=test;}
+    ctx.fillText(line,textX,lineY);
+    if(dialog.phase==="done"){ctx.fillStyle="#64748b";ctx.font="10px monospace";ctx.fillText("▼ SPACE",textX,boxY+boxH-12);}
   }
 }
 
-function drawInteractionPrompt() {
-  if (dialog.active) return;
-  const idx = getAdjacentAgent();
-  if (idx === -1) return;
-  const a = agents[idx];
-  const sx = a.px*SCALE - camera.x + TS/2;
-  const sy = a.py*SCALE - camera.y - 30;
-
-  // Pulsing prompt
-  const pulse = 0.7 + Math.sin(gameTime*0.08)*0.3;
-  ctx.globalAlpha = pulse;
-  ctx.fillStyle = "rgba(0,0,0,0.8)";
-  const bw = 62, bh = 22;
-  ctx.beginPath(); ctx.roundRect(sx-bw/2, sy-bh, bw, bh, 4); ctx.fill();
-  ctx.fillStyle = "#fbbf24";
-  ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
-  ctx.fillText("[SPACE]", sx, sy-6);
-  ctx.globalAlpha = 1;
-}
-
-function drawDialog() {
-  if (!dialog.active) return;
-  const boxH = 130, boxY = canvas.height - boxH - 16, boxX = 30, boxW = canvas.width - 60;
-
-  ctx.fillStyle = "rgba(10,15,30,0.94)";
-  ctx.beginPath(); ctx.roundRect(boxX, boxY, boxW, boxH, 8); ctx.fill();
-  const a = agents[dialog.agentIndex];
-  ctx.strokeStyle = a ? a.color+"80" : "#60a5fa";
-  ctx.lineWidth = 2; ctx.stroke();
-
-  if (dialog.agentIndex >= 0) {
-    const ag = agents[dialog.agentIndex];
-    const ps = 56, px = boxX+14, py = boxY + (boxH-ps)/2;
-    ctx.fillStyle = "#0f172a"; ctx.fillRect(px, py, ps, ps);
-    ctx.drawImage(agentSprites[dialog.agentIndex].frame1, px+4, py+4, 48, 48);
-    ctx.strokeStyle = ag.color+"80"; ctx.lineWidth = 1; ctx.strokeRect(px, py, ps, ps);
-    // Status indicator
-    const statusColor = ag.activeTask ? (ag.activeTask.status === "running" ? "#fbbf24" : "#8b5cf6") : "#22c55e";
-    ctx.fillStyle = statusColor;
-    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 5, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#0f172a";
-    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 3, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = statusColor;
-    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 2, 0, Math.PI*2); ctx.fill();
-  }
-
-  const textX = boxX + 84, textY = boxY + 28, maxWidth = boxW - 100;
-
-  if (dialog.phase === "typing") {
-    dialog.charTimer++;
-    if (dialog.charTimer >= 1) {
-      dialog.charTimer = 0;
-      dialog.displayedChars = Math.min(dialog.displayedChars+1, dialog.text.length);
-      if (dialog.displayedChars >= dialog.text.length) dialog.phase = "done";
-    }
-  }
-
-  ctx.fillStyle = "#e2e8f0"; ctx.font = "12px monospace"; ctx.textAlign = "left";
-  const words = dialog.text.substring(0, dialog.displayedChars).split(' ');
-  let line = '', lineY = textY;
-  for (const word of words) {
-    const test = line + word + ' ';
-    if (ctx.measureText(test).width > maxWidth && line.length > 0) {
-      ctx.fillText(line, textX, lineY); line = word + ' '; lineY += 16;
-    } else line = test;
-  }
-  ctx.fillText(line, textX, lineY);
-
-  if (dialog.phase === "done") {
-    ctx.fillStyle = "#64748b"; ctx.font = "10px monospace";
-    ctx.fillText("▼ SPACE", textX, boxY+boxH-12);
-  }
-  if (dialog.phase === "question") {
-    ctx.fillStyle = "#e2e8f0"; ctx.font = "12px monospace";
-    ctx.fillText("View full task list?", textX, boxY+28);
-    const opts = ["Yes, show details", "No thanks"];
-    for (let i = 0; i < opts.length; i++) {
-      const sel = dialog.selectedOption === i;
-      ctx.fillStyle = sel ? "#fbbf24" : "#64748b";
-      ctx.font = (sel?"bold ":"")+"12px monospace";
-      ctx.fillText((sel?"> ":"  ")+opts[i], textX+8, boxY+50+i*20);
-    }
-  }
-}
-
-// ═══════════════════════════════════════════
 // HUD
-// ═══════════════════════════════════════════
-function drawMinimap() {
-  const mmW=130, mmH=100, mmX=canvas.width-mmW-12, mmY=12;
-  const sx=mmW/COLS, sy=mmH/ROWS;
-  ctx.fillStyle="rgba(10,15,30,0.88)";
-  ctx.beginPath(); ctx.roundRect(mmX-4, mmY-4, mmW+8, mmH+8, 6); ctx.fill();
-  ctx.strokeStyle="#1e293b"; ctx.lineWidth=1; ctx.stroke();
-  for (const [key,z] of Object.entries(ZONES)) {
-    ctx.fillStyle = z.color+(key===activePhase?"50":"25");
-    ctx.fillRect(mmX+z.x*sx, mmY+z.y*sy, z.w*sx, z.h*sy);
-  }
-  for (const a of agents) { ctx.fillStyle=a.color; ctx.fillRect(mmX+a.x*sx-1, mmY+a.y*sy-1, 3, 3); }
-  ctx.fillStyle="#fbbf24"; ctx.fillRect(mmX+player.x*sx-2, mmY+player.y*sy-2, 4, 4);
-  ctx.fillStyle="#475569"; ctx.font="8px monospace"; ctx.textAlign="right";
-  ctx.fillText("MAP", mmX+mmW, mmY-6);
+function drawMinimap(){
+  const mmW=130,mmH=90,mmX=canvas.width-mmW-12,mmY=12,sx=mmW/COLS,sy=mmH/ROWS;
+  ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(mmX-4,mmY-4,mmW+8,mmH+8,6);ctx.fill();
+  for(const[k,z]of Object.entries(ZONES)){ctx.fillStyle=z.color+(k===activePhase?"50":"25");ctx.fillRect(mmX+z.x*sx,mmY+z.y*sy,z.w*sx,z.h*sy);}
+  for(const a of agents){ctx.fillStyle=a.state==="egg"?"#f5f0e0":a.color;ctx.fillRect(mmX+a.x*sx-1,mmY+a.y*sy-1,3,3);}
+  ctx.fillStyle="#fbbf24";ctx.fillRect(mmX+player.x*sx-2,mmY+player.y*sy-2,4,4);
 }
 
-function drawAgentRoster() {
-  const rX=12; let rY=12;
-  const rH = agents.length*28+22;
-  ctx.fillStyle="rgba(10,15,30,0.88)";
-  ctx.beginPath(); ctx.roundRect(rX-2, rY-2, 170, rH+4, 6); ctx.fill();
-  ctx.strokeStyle="#1e293b"; ctx.lineWidth=1; ctx.stroke();
-  ctx.fillStyle="#475569"; ctx.font="8px monospace"; ctx.textAlign="left";
-  ctx.fillText("TEAM", rX+8, rY+10);
-  rY += 18;
-  for (const a of agents) {
-    // Color bar
-    ctx.fillStyle = a.color+"30";
-    ctx.fillRect(rX+2, rY-2, 164, 24);
-    // Color dot with status
-    const statusColor = a.activeTask ? (a.activeTask.status === "running" ? "#fbbf24" : "#8b5cf6") : "#22c55e";
-    ctx.fillStyle = a.color;
-    ctx.beginPath(); ctx.arc(rX+14, rY+8, 5, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = statusColor;
-    ctx.beginPath(); ctx.arc(rX+14, rY+8, 2.5, 0, Math.PI*2); ctx.fill();
-    // Name
-    ctx.fillStyle="#cbd5e1"; ctx.font="10px monospace";
-    ctx.fillText(a.name, rX+24, rY+8);
-    // Task hint
-    if (a.activeTask) {
-      ctx.fillStyle = statusColor;
-      ctx.font = "7px monospace";
-      let hint = a.activeTask.name;
-      if (hint.length > 20) hint = hint.substring(0, 19) + "…";
-      ctx.fillText(hint, rX+24, rY+18);
-    } else {
-      ctx.fillStyle = "#334155"; ctx.font="7px monospace";
-      ctx.fillText("idle", rX+24, rY+18);
-    }
-    rY += 28;
+function drawAgentRoster(){
+  const rX=12;let rY=12;const rH=agents.length*28+22;
+  ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(rX-2,rY-2,170,rH+4,6);ctx.fill();
+  ctx.fillStyle="#475569";ctx.font="8px monospace";ctx.textAlign="left";ctx.fillText("TEAM",rX+8,rY+10);rY+=18;
+  for(const a of agents){
+    ctx.fillStyle=a.color+"30";ctx.fillRect(rX+2,rY-2,164,24);
+    const stateColors={egg:"#64748b",hatching:"#fbbf24",walking_to_work:"#fbbf24",working:"#22c55e",walking_to_egg:"#f59e0b"};
+    if(agentImages[a.name]){ctx.drawImage(agentImages[a.name],rX+4,rY-2,18,18);}
+    else{ctx.fillStyle=a.color;ctx.beginPath();ctx.arc(rX+14,rY+8,5,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle=stateColors[a.state]||"#64748b";ctx.beginPath();ctx.arc(rX+22,rY+14,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#cbd5e1";ctx.font="10px monospace";ctx.fillText(a.name,rX+24,rY+8);
+    ctx.fillStyle="#475569";ctx.font="7px monospace";
+    const stateLabels={egg:"💤 dormant",hatching:"🥚 hatching...",walking_to_work:"🚶 heading to work",working:"⚡ working",walking_to_egg:"🔙 returning"};
+    ctx.fillText(stateLabels[a.state]||a.state,rX+24,rY+18);
+    rY+=28;
   }
 }
 
-function drawZonePopup() {
-  if (zoneNameTimer <= 0) return;
-  const alpha = Math.min(1, zoneNameTimer/30);
-  ctx.globalAlpha = alpha;
-  const px = canvas.width/2, py = 55;
-  ctx.font = "bold 18px monospace"; ctx.textAlign = "center";
-  const mw = ctx.measureText(currentZoneName).width;
-  ctx.fillStyle="rgba(10,15,30,0.85)";
-  ctx.beginPath(); ctx.roundRect(px-mw/2-16, py-16, mw+32, 34, 6); ctx.fill();
-  ctx.fillStyle = ZONES[activePhase] ? ZONES[activePhase].color : "#fff";
-  ctx.fillText(currentZoneName, px, py+6);
-  ctx.globalAlpha = 1;
+function drawZonePopup(){
+  if(zoneNameTimer<=0)return;ctx.globalAlpha=Math.min(1,zoneNameTimer/30);
+  const px=canvas.width/2,py=55;ctx.font="bold 18px monospace";ctx.textAlign="center";
+  const mw=ctx.measureText(currentZoneName).width;
+  ctx.fillStyle="rgba(10,15,30,0.85)";ctx.beginPath();ctx.roundRect(px-mw/2-16,py-16,mw+32,34,6);ctx.fill();
+  ctx.fillStyle=ZONES[activePhase]?ZONES[activePhase].color:"#fff";ctx.fillText(currentZoneName,px,py+6);ctx.globalAlpha=1;
 }
 
-function drawControlsHint() {
-  ctx.fillStyle="rgba(10,15,30,0.75)";
-  const hintW = 420;
-  ctx.beginPath(); ctx.roundRect(10, canvas.height-32, hintW, 22, 4); ctx.fill();
-  ctx.fillStyle="#475569"; ctx.font="10px monospace"; ctx.textAlign="left";
-  ctx.fillText("WASD/Arrows: Move  |  SPACE: Talk  |  ESC: Close", 18, canvas.height-17);
+function drawControlsHint(){
+  ctx.fillStyle="rgba(10,15,30,0.75)";ctx.beginPath();ctx.roundRect(10,canvas.height-32,420,22,4);ctx.fill();
+  ctx.fillStyle="#475569";ctx.font="10px monospace";ctx.textAlign="left";
+  ctx.fillText("WASD/Arrows: Move  |  SPACE: Talk  |  ESC: Close",18,canvas.height-17);
 }
 
 // ═══════════════════════════════════════════
 // GAME LOOP
 // ═══════════════════════════════════════════
-function update() {
-  gameTime++;
-  updatePlayer();
-  updateAgents();
-  updateCamera();
-  updateZoneDetection();
-}
+function update(){gameTime++;updatePlayer();updateAgents();updateCamera();updateZoneDetection();}
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#0f172a"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const startCol = Math.max(0, Math.floor(camera.x/TS));
-  const endCol = Math.min(COLS, Math.ceil((camera.x+canvas.width)/TS)+1);
-  const startRow = Math.max(0, Math.floor(camera.y/TS));
-  const endRow = Math.min(ROWS, Math.ceil((camera.y+canvas.height)/TS)+1);
-  for (let y=startRow; y<endRow; y++) for (let x=startCol; x<endCol; x++) drawTile(x, y);
-
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#0f172a";ctx.fillRect(0,0,canvas.width,canvas.height);
+  const sc=Math.max(0,Math.floor(camera.x/TS)),ec=Math.min(COLS,Math.ceil((camera.x+canvas.width)/TS)+1);
+  const sr=Math.max(0,Math.floor(camera.y/TS)),er=Math.min(ROWS,Math.ceil((camera.y+canvas.height)/TS)+1);
+  for(let y=sr;y<er;y++)for(let x=sc;x<ec;x++)drawTile(x,y);
   drawZoneLabels();
 
-  // Depth-sorted characters
-  const chars = [{ type:"player", py:player.py, px:player.px, frame:player.frame }];
-  for (let i=0; i<agents.length; i++) chars.push({ type:"agent", index:i, py:agents[i].py, px:agents[i].px, frame:agents[i].frame });
-  chars.sort((a,b) => a.py - b.py);
-  for (const c of chars) {
-    if (c.type==="player") drawSprite(c.frame===0 ? ceoSprites.frame1 : ceoSprites.frame2, c.px, c.py);
-    else drawSprite(c.frame===0 ? agentSprites[c.index].frame1 : agentSprites[c.index].frame2, c.px, c.py);
+  // Depth-sorted characters + eggs
+  const chars=[{type:"player",py:player.py,px:player.px,frame:player.frame}];
+  for(let i=0;i<agents.length;i++){
+    const a=agents[i];
+    if(a.state==="egg")chars.push({type:"egg",index:i,py:a.py,px:a.px});
+    else if(a.state==="hatching"){
+      if(a.hatchTimer<40)chars.push({type:"egg-crack",index:i,py:a.py,px:a.px});
+      else chars.push({type:"agent",index:i,py:a.py,px:a.px,frame:a.frame});
+    }
+    else chars.push({type:"agent",index:i,py:a.py,px:a.px,frame:a.frame});
+  }
+  chars.sort((a,b)=>a.py-b.py);
+  for(const c of chars){
+    if(c.type==="player"){
+      if(agentImages["CEO"]) drawAgentImage(agentImages["CEO"],c.px,c.py);
+      else drawSprite(c.frame===0?ceoSprites.frame1:ceoSprites.frame2,c.px,c.py);
+    }
+    else if(c.type==="egg"){
+      drawSprite(eggSprite,c.px,c.py);
+      // Gentle bob
+      const sx=c.px*SCALE-camera.x+TS/2,sy=c.py*SCALE-camera.y-4;
+      ctx.fillStyle="#475569";ctx.font="7px monospace";ctx.textAlign="center";
+      ctx.fillText("💤",sx,sy+Math.sin(gameTime*0.02+c.index)*2);
+    }
+    else if(c.type==="egg-crack"){
+      drawSprite(eggCrackedSprite,c.px,c.py);
+      // Shake effect
+      const shake=Math.sin(gameTime*0.5)*2;
+      const sx=c.px*SCALE-camera.x+TS/2+shake,sy=c.py*SCALE-camera.y-10;
+      ctx.fillStyle="#fbbf24";ctx.font="9px monospace";ctx.textAlign="center";ctx.fillText("✨",sx,sy);
+    }
+    else if(c.type==="agent"){
+      const aName=agents[c.index].name;
+      if(agentImages[aName]) drawAgentImage(agentImages[aName],c.px,c.py);
+      else drawSprite(c.frame===0?agentPixelSprites[c.index].frame1:agentPixelSprites[c.index].frame2,c.px,c.py);
+    }
   }
 
-  drawThoughtBubbles();
-  drawInteractionPrompt();
-  drawMinimap();
-  drawAgentRoster();
-  drawZonePopup();
-  drawControlsHint();
-  drawDialog();
+  drawThoughtBubbles();drawInteractionPrompt();drawMinimap();drawAgentRoster();drawZonePopup();drawControlsHint();drawDialog();
 }
 
-function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
-
-camera.x = player.px*SCALE - canvas.width/2;
-camera.y = player.py*SCALE - canvas.height/2;
+function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
+camera.x=player.px*SCALE-canvas.width/2;camera.y=player.py*SCALE-canvas.height/2;
 gameLoop();
 </script>
 </body>
