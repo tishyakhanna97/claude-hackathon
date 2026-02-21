@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solopreneur - AI Org Chart</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a; color: #e2e8f0; min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SVG overlay for connection lines */
+  #connections {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+
+  .page { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  .header { text-align: center; padding: 36px 20px 12px; }
+  .header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .header p { color: #94a3b8; font-size: 0.95rem; }
+
+  /* CEO node */
+  .ceo-row { display: flex; justify-content: center; padding: 20px 0 8px; }
+  .ceo-node {
+    padding: 14px 32px; border-radius: 14px; text-align: center;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1e293b; font-weight: 700; font-size: 1.05rem;
+    box-shadow: 0 4px 16px rgba(251,191,36,0.25);
+    position: relative; z-index: 1;
+  }
+
+  /* Section */
+  .section { padding: 16px 0; }
+  .section-title {
+    font-size: 0.8rem; color: #94a3b8; text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 14px; padding-left: 10px;
+    border-left: 3px solid #818cf8;
+  }
+
+  /* Agent cards */
+  .agent-row {
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .agent-card {
+    background: #1e293b; border: 1px solid #3b82f6; border-radius: 12px;
+    padding: 16px; width: 220px; transition: all 0.2s; cursor: default;
+    position: relative; z-index: 1;
+  }
+  .agent-card:hover, .agent-card.highlight {
+    border-color: #60a5fa; box-shadow: 0 0 20px rgba(59,130,246,0.25);
+    transform: translateY(-2px);
+  }
+  .agent-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .agent-icon { font-size: 1.3rem; }
+  .agent-name { font-weight: 600; font-size: 1rem; flex: 1; }
+  .model-badge {
+    font-size: 0.65rem; padding: 2px 8px; border-radius: 8px;
+    color: #fff; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .agent-desc { font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; line-height: 1.4; }
+  .agent-connections { display: flex; flex-direction: column; gap: 6px; }
+  .conn-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .conn-label {
+    font-size: 0.65rem; color: #64748b; text-transform: uppercase;
+    letter-spacing: 1px; width: 42px; flex-shrink: 0;
+  }
+  .tag {
+    font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; font-weight: 500;
+  }
+  .tag-skill { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+  .tag-mcp { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+
+  /* Skill / MCP cards */
+  .card-row {
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .skill-card, .mcp-card {
+    border-radius: 10px; padding: 12px 16px; width: 170px;
+    text-align: center; transition: all 0.2s; cursor: default;
+    position: relative; z-index: 1;
+  }
+  .skill-card {
+    background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25);
+  }
+  .skill-card:hover, .skill-card.highlight {
+    border-color: #8b5cf6; box-shadow: 0 0 16px rgba(139,92,246,0.2);
+  }
+  .mcp-card {
+    background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);
+  }
+  .mcp-card:hover, .mcp-card.highlight {
+    border-color: #10b981; box-shadow: 0 0 16px rgba(16,185,129,0.2);
+  }
+  .card-icon { font-size: 1.2rem; margin-bottom: 4px; }
+  .card-name { font-weight: 600; font-size: 0.9rem; }
+  .card-desc { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; line-height: 1.3; }
+  .card-meta { font-size: 0.65rem; color: #475569; margin-top: 6px; font-style: italic; }
+
+  /* Team cards */
+  .team-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+  .team-card {
+    background: transparent; border: 2px dashed #475569; border-radius: 12px;
+    padding: 14px 18px; min-width: 200px; cursor: pointer;
+    transition: all 0.2s; position: relative; z-index: 1;
+  }
+  .team-card:hover { border-color: #818cf8; }
+  .team-card.active { border-color: #818cf8; background: rgba(129,140,248,0.05); }
+  .team-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+  .team-members { display: flex; flex-wrap: wrap; gap: 4px; }
+  .team-member {
+    font-size: 0.75rem; padding: 3px 8px; border-radius: 6px;
+    background: rgba(129,140,248,0.12); color: #a5b4fc; border: 1px solid rgba(129,140,248,0.2);
+  }
+
+  /* Lifecycle */
+  .lifecycle {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    justify-content: center;
+  }
+  .lc-step {
+    background: #1e293b; border: 1px solid #475569; padding: 6px 14px;
+    border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #e2e8f0;
+  }
+  .lc-arrow { color: #818cf8; font-size: 1.1rem; font-weight: 700; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 20px; justify-content: center; padding: 12px 0 4px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #94a3b8; }
+  .legend-line {
+    width: 32px; height: 0; border-top: 2px solid; display: inline-block;
+  }
+  .legend-line.solid { border-color: #475569; }
+  .legend-line.dotted { border-color: #475569; border-top-style: dashed; }
+
+  .footer { text-align: center; padding: 32px; color: #334155; font-size: 0.8rem; }
+
+  /* Fade non-highlighted on team hover */
+  .page.filtering .agent-card:not(.highlight),
+  .page.filtering .skill-card:not(.highlight),
+  .page.filtering .mcp-card:not(.highlight) {
+    opacity: 0.2; transform: scale(0.97);
+  }
+
+  /* Detail panel (slide-in from right) */
+  .detail-overlay {
+    position: fixed; top: 0; right: 0; width: 420px; max-width: 90vw; height: 100vh;
+    background: #1e293b; border-left: 2px solid #334155; z-index: 100;
+    transform: translateX(100%); transition: transform 0.25s ease;
+    display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+  }
+  .detail-overlay.open { transform: translateX(0); }
+  .detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid #334155; flex-shrink: 0;
+  }
+  .detail-header h2 { font-size: 1.1rem; color: #e2e8f0; margin: 0; }
+  .detail-close {
+    background: none; border: none; color: #94a3b8; font-size: 1.4rem;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px;
+  }
+  .detail-close:hover { background: #334155; color: #e2e8f0; }
+  .detail-type {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 6px; margin-right: 10px; font-weight: 600;
+  }
+  .detail-type.agent { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .detail-type.skill { background: rgba(139,92,246,0.2); color: #a78bfa; }
+  .detail-type.mcp { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .detail-type.team { background: rgba(129,140,248,0.12); color: #a5b4fc; }
+  .detail-body {
+    padding: 20px; overflow-y: auto; flex: 1;
+    font-size: 0.85rem; line-height: 1.7; color: #cbd5e1;
+  }
+  .detail-body pre {
+    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+    padding: 12px; overflow-x: auto; font-size: 0.8rem; margin: 8px 0;
+  }
+  .detail-body code { color: #a78bfa; }
+  .detail-body h1, .detail-body h2, .detail-body h3 {
+    color: #e2e8f0; margin: 16px 0 8px; }
+  .detail-body h1 { font-size: 1.1rem; }
+  .detail-body h2 { font-size: 1rem; }
+  .detail-body h3 { font-size: 0.9rem; }
+  .detail-body ul, .detail-body ol { padding-left: 20px; margin: 6px 0; }
+  .detail-body li { margin: 4px 0; }
+  .detail-body strong { color: #e2e8f0; }
+  .detail-body .detail-meta {
+    background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 16px;
+    font-size: 0.8rem;
+  }
+  .detail-body .detail-meta span { display: block; margin: 4px 0; }
+  .detail-body .detail-meta .meta-label { color: #64748b; text-transform: uppercase;
+    font-size: 0.65rem; letter-spacing: 1px; }
+  .detail-scrim {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3); z-index: 99; display: none;
+  }
+  .detail-scrim.open { display: block; }
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <svg id="connections"></svg>
+
+  <div class="header">
+    <h1>Solopreneur</h1>
+    <p>AI Org Chart</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-line solid"></span> Direct relationship</div>
+    <div class="legend-item"><span class="legend-line dotted"></span> Optional tool access</div>
+    <div class="legend-item"><span class="model-badge" style="background:#64748b;font-size:0.65rem;padding:2px 6px;border-radius:6px;color:#fff">model</span> AI model used</div>
+  </div>
+
+  <div class="ceo-row">
+    <div class="ceo-node" id="ceo-node">&#x1F451; CEO (You)</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Employees (Agents)</div>
+    <div class="agent-row">
+            <div class="agent-card" id="agent-BizOps" data-name="BizOps">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">BizOps</span>
+                    <span class="model-badge" style="background:#c084fc">opus</span>
+                </div>
+                <div class="agent-desc">Market Analysis &amp; pricing strategy</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/discover</span><span class="tag tag-skill">/review</span></div>
+                    
+                </div>
+            </div>
+            <div class="agent-card" id="agent-Content Strategist" data-name="Content Strategist">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">Content Strategist</span>
+                    <span class="model-badge" style="background:#c084fc">opus</span>
+                </div>
+                <div class="agent-desc">Messaging &amp; copywriting</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/release-notes</span><span class="tag tag-skill">/write-tutorial</span></div>
+                    
+                </div>
+            </div>
+            <div class="agent-card" id="agent-Designer" data-name="Designer">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">Designer</span>
+                    <span class="model-badge" style="background:#c084fc">opus</span>
+                </div>
+                <div class="agent-desc">UI/UX &amp; user flows</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/design</span><span class="tag tag-skill">/review</span><span class="tag tag-skill">/spec</span></div>
+                    <div class="conn-group"><span class="conn-label">Tools</span><span class="tag tag-mcp">Chrome DevTools</span></div>
+                </div>
+            </div>
+            <div class="agent-card" id="agent-Engineer" data-name="Engineer">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">Engineer</span>
+                    <span class="model-badge" style="background:#c084fc">opus</span>
+                </div>
+                <div class="agent-desc">Architecture &amp; implementation</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/build</span><span class="tag tag-skill">/review</span><span class="tag tag-skill">/spec</span></div>
+                    <div class="conn-group"><span class="conn-label">Tools</span><span class="tag tag-mcp">Chrome DevTools</span></div>
+                </div>
+            </div>
+            <div class="agent-card" id="agent-QA" data-name="QA">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">QA</span>
+                    <span class="model-badge" style="background:#818cf8">sonnet</span>
+                </div>
+                <div class="agent-desc">Testing &amp; bug hunting</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/review</span><span class="tag tag-skill">/ship</span></div>
+                    <div class="conn-group"><span class="conn-label">Tools</span><span class="tag tag-mcp">GitHub</span></div>
+                </div>
+            </div>
+            <div class="agent-card" id="agent-Researcher" data-name="Researcher">
+                <div class="agent-header">
+                    <span class="agent-icon">&#x1f464;</span>
+                    <span class="agent-name">Researcher</span>
+                    <span class="model-badge" style="background:#818cf8">sonnet</span>
+                </div>
+                <div class="agent-desc">Competitive Analysis &amp; user research synthesis</div>
+                <div class="agent-connections">
+                    <div class="conn-group"><span class="conn-label">Skills</span><span class="tag tag-skill">/discover</span></div>
+                    <div class="conn-group"><span class="conn-label">Tools</span><span class="tag tag-mcp">Context7</span></div>
+                </div>
+            </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">SOPs (Skills)</div>
+    <div class="card-row">
+            <div class="skill-card" id="skill-build" data-name="build">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/build</div>
+                <div class="card-desc">Plan and execute code implementation ...</div>
+                <div class="card-meta">Used by: Engineer</div>
+            </div>
+            <div class="skill-card" id="skill-design" data-name="design">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/design</div>
+                <div class="card-desc">Create design direction</div>
+                <div class="card-meta">Used by: Designer</div>
+            </div>
+            <div class="skill-card" id="skill-discover" data-name="discover">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/discover</div>
+                <div class="card-desc">Research and validate product ideas</div>
+                <div class="card-meta">Used by: BizOps, Researcher</div>
+            </div>
+            <div class="skill-card" id="skill-explain" data-name="explain">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/explain</div>
+                <div class="card-desc">Explain how any Claude Code concept w...</div>
+                <div class="card-meta">Used by: unassigned</div>
+            </div>
+            <div class="skill-card" id="skill-kickoff" data-name="kickoff">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/kickoff</div>
+                <div class="card-desc">Launch a team meeting where multiple ...</div>
+                <div class="card-meta">Used by: unassigned</div>
+            </div>
+            <div class="skill-card" id="skill-release-notes" data-name="release-notes">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/release-notes</div>
+                <div class="card-desc">Generate audience-targeted release an...</div>
+                <div class="card-meta">Used by: Content Strategist</div>
+            </div>
+            <div class="skill-card" id="skill-review" data-name="review">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/review</div>
+                <div class="card-desc">Quality &amp; bugs</div>
+                <div class="card-meta">Used by: BizOps, Designer, Engineer, QA</div>
+            </div>
+            <div class="skill-card" id="skill-scaffold" data-name="scaffold">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/scaffold</div>
+                <div class="card-desc">Design and scaffold your own AI org s...</div>
+                <div class="card-meta">Used by: unassigned</div>
+            </div>
+            <div class="skill-card" id="skill-ship" data-name="ship">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/ship</div>
+                <div class="card-desc">Deploy and launch a feature or product</div>
+                <div class="card-meta">Used by: QA</div>
+            </div>
+            <div class="skill-card" id="skill-spec" data-name="spec">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/spec</div>
+                <div class="card-desc">Write a product specification (PRD) f...</div>
+                <div class="card-meta">Used by: Designer, Engineer</div>
+            </div>
+            <div class="skill-card" id="skill-standup" data-name="standup">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/standup</div>
+                <div class="card-desc">Generate a daily standup summary show...</div>
+                <div class="card-meta">Used by: unassigned</div>
+            </div>
+            <div class="skill-card" id="skill-write-tutorial" data-name="write-tutorial">
+                <div class="card-icon">&#x26A1;</div>
+                <div class="card-name">/write-tutorial</div>
+                <div class="card-desc">Synthesize the observer log into a st...</div>
+                <div class="card-meta">Used by: Content Strategist</div>
+            </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tools (MCP Servers)</div>
+    <div class="card-row">
+            <div class="mcp-card" id="mcp-GitHub" data-name="GitHub">
+                <div class="card-icon">&#x1F50C;</div>
+                <div class="card-name">GitHub</div>
+                
+                <div class="card-meta">Used by: QA</div>
+            </div>
+            <div class="mcp-card" id="mcp-Context7" data-name="Context7">
+                <div class="card-icon">&#x1F50C;</div>
+                <div class="card-name">Context7</div>
+                
+                <div class="card-meta">Used by: Researcher</div>
+            </div>
+            <div class="mcp-card" id="mcp-Chrome DevTools" data-name="Chrome DevTools">
+                <div class="card-icon">&#x1F50C;</div>
+                <div class="card-name">Chrome DevTools</div>
+                
+                <div class="card-meta">Used by: Designer, Engineer</div>
+            </div>
+    </div>
+  </div>
+
+  
+        <div class="section">
+            <div class="section-title">Product Lifecycle</div>
+            <div class="lifecycle"><span class="lc-step">/discover</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/spec</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/design</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/build</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/review</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/ship</span><span class="lc-arrow">&#x2192;</span><span class="lc-step">/release-notes</span></div>
+        </div>
+
+  <div class="section">
+    <div class="section-title">Agent Teams</div>
+    <div class="team-row">
+            <div class="team-card" id="team-0" data-members='["BizOps", "Researcher"]'>
+                <div class="team-name">&#x1F91D; Discovery Sprint</div>
+                <div class="team-members"><span class="team-member">BizOps</span><span class="team-member">Researcher</span></div>
+            </div>
+            <div class="team-card" id="team-1" data-members='["BizOps", "Designer", "Engineer", "QA"]'>
+                <div class="team-name">&#x1F91D; Build &amp; QA</div>
+                <div class="team-members"><span class="team-member">BizOps</span><span class="team-member">Designer</span><span class="team-member">Engineer</span><span class="team-member">QA</span></div>
+            </div>
+            <div class="team-card" id="team-2" data-members='["Content Strategist", "QA"]'>
+                <div class="team-name">&#x1F91D; Ship &amp; Launch</div>
+                <div class="team-members"><span class="team-member">Content Strategist</span><span class="team-member">QA</span></div>
+            </div>
+    </div>
+  </div>
+
+  <div class="footer">Generated by Solopreneur Scaffold &middot; Claude Code Plugin</div>
+</div>
+
+<div class="detail-scrim" id="detail-scrim"></div>
+<div class="detail-overlay" id="detail-panel">
+  <div class="detail-header">
+    <div style="display:flex;align-items:center">
+      <span class="detail-type" id="detail-type-badge"></span>
+      <h2 id="detail-title"></h2>
+    </div>
+    <button class="detail-close" id="detail-close">&times;</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<script>
+const CONNECTIONS = [{"from": "agent-BizOps", "to": "skill-discover", "type": "solid"}, {"from": "agent-BizOps", "to": "skill-review", "type": "solid"}, {"from": "agent-Content Strategist", "to": "skill-release-notes", "type": "solid"}, {"from": "agent-Content Strategist", "to": "skill-write-tutorial", "type": "solid"}, {"from": "agent-Designer", "to": "skill-design", "type": "solid"}, {"from": "agent-Designer", "to": "skill-review", "type": "solid"}, {"from": "agent-Designer", "to": "skill-spec", "type": "solid"}, {"from": "agent-Designer", "to": "mcp-Chrome DevTools", "type": "dotted"}, {"from": "agent-Engineer", "to": "skill-build", "type": "solid"}, {"from": "agent-Engineer", "to": "skill-review", "type": "solid"}, {"from": "agent-Engineer", "to": "skill-spec", "type": "solid"}, {"from": "agent-Engineer", "to": "mcp-Chrome DevTools", "type": "dotted"}, {"from": "agent-QA", "to": "skill-review", "type": "solid"}, {"from": "agent-QA", "to": "skill-ship", "type": "solid"}, {"from": "agent-QA", "to": "mcp-GitHub", "type": "dotted"}, {"from": "agent-Researcher", "to": "skill-discover", "type": "solid"}, {"from": "agent-Researcher", "to": "mcp-Context7", "type": "dotted"}, {"from": "ceo-node", "to": "agent-BizOps", "type": "solid"}, {"from": "ceo-node", "to": "agent-Content Strategist", "type": "solid"}, {"from": "ceo-node", "to": "agent-Designer", "type": "solid"}, {"from": "ceo-node", "to": "agent-Engineer", "type": "solid"}, {"from": "ceo-node", "to": "agent-QA", "type": "solid"}, {"from": "ceo-node", "to": "agent-Researcher", "type": "solid"}];
+const TEAMS = [{"name": "Discovery Sprint", "members": ["BizOps", "Researcher"]}, {"name": "Build & QA", "members": ["BizOps", "Designer", "Engineer", "QA"]}, {"name": "Ship & Launch", "members": ["Content Strategist", "QA"]}];
+const DETAIL_DATA = {"agent-BizOps": {"type": "agent", "name": "BizOps", "model": "opus", "skills": ["discover", "review"], "mcps": [], "description": "Business operations specialist covering market analysis, pricing strategy, go-to-market planning, and competitive intelligence. Use proactively when evaluating business viability, analyzing markets, or planning launches.", "markdown": "You are the business operations lead on the Solopreneur team. The user is the CEO of a solo venture.\n\n## How You Work\n\n- Think in terms of unit economics, market fit, and competitive advantage\n- Frame analysis with: TAM/SAM/SOM, competitive positioning, pricing psychology\n- Always connect technical decisions to business outcomes\n- Provide specific, quantified estimates when possible (even rough ones with stated assumptions)\n- Default to lean/bootstrapped strategies unless the user indicates otherwise\n- Be honest about risks and market realities - don't just tell the CEO what they want to hear\n\n## Output Format\n\nWhen producing business analysis, structure as:\n\n1. **Key Takeaway**: One-sentence summary\n2. **Market Context**: Size, growth, key players\n3. **Competitive Positioning**: Where this sits vs alternatives\n4. **Revenue Model**: How this makes money\n5. **Risk Factors**: What could go wrong\n6. **Recommendation**: Go/no-go with rationale\n\n## When Delegated To\n\n- For `/solopreneur:discover`: Assess market size, pricing opportunities, business viability\n- For `/solopreneur:spec`: Validate business requirements and prioritization\n- For `/solopreneur:review`: Evaluate business impact and commercial viability\n- For `/solopreneur:kickoff`: Focus on market opportunity and business strategy"}, "agent-Content Strategist": {"type": "agent", "name": "Content Strategist", "model": "opus", "skills": ["release-notes", "write-tutorial"], "mcps": [], "description": "Content strategist specializing in messaging, copywriting, tutorials, documentation, and launch communications. Use proactively when creating content, writing documentation, or crafting user-facing text.", "markdown": "You are the content strategist on the Solopreneur team. You make complex things clear and compelling.\n\n## How You Work\n\n- Write in a clear, engaging, and accessible voice\n- For tutorials: assume the reader is smart but unfamiliar with the specifics\n- For launch copy: lead with the user benefit, not the feature\n- For documentation: be precise, use examples, avoid jargon\n- Suggest where visuals would help by inserting `[IMAGE: description of what to screenshot/create]`\n- Adapt tone to the audience:\n  - **Customers**: Benefit-focused, exciting, clear\n  - **Internal team / engineers**: Technical, specific, actionable\n  - **Investors**: Business impact, metrics, growth\n  - **Social media**: Punchy, shareable, hook-driven\n\n## Content Structures\n\nFor tutorials: Context \u2192 Action \u2192 Result \u2192 Reflection\nFor launch announcements: Hook \u2192 Problem \u2192 Solution \u2192 CTA\nFor release notes: What's New \u2192 Why It Matters \u2192 How to Use It\nFor documentation: What \u2192 Why \u2192 How \u2192 Examples \u2192 Troubleshooting\n\n## When Delegated To\n\n- For `/solopreneur:release-notes`: Generate audience-appropriate announcements\n- For `/solopreneur:ship`: Draft launch announcement and social posts\n- For `/solopreneur:write-tutorial`: Synthesize observer log into a tutorial"}, "agent-Designer": {"type": "agent", "name": "Designer", "model": "opus", "skills": ["design", "review", "spec"], "mcps": ["Chrome DevTools"], "description": "Product designer specializing in UI/UX, user flows, wireframes, and design systems. Use proactively when creating user interfaces, planning user experiences, or establishing visual direction.", "markdown": "You are a product designer on the Solopreneur team. The user is the CEO of a solo venture.\n\n## How You Work\n\n- Think in terms of user goals, not features. Start every design with \"What is the user trying to accomplish?\"\n- Use ASCII art for quick wireframes and flow diagrams\n- Prioritize accessibility (WCAG AA) and mobile-first design\n- When proposing designs, describe the user's emotional journey at each step\n- Reference existing design system components when available\n- If the Figma MCP server is available, pull design tokens and existing components\n\n## Output Format\n\nWhen producing design direction, structure as:\n\n1. **User Flow**: ASCII diagram showing the steps\n2. **Key Screens**: Description + layout for each screen\n3. **Component List**: UI components needed\n4. **Visual Direction**: Color, typography, spacing recommendations\n5. **Accessibility**: Considerations for screen readers, contrast, keyboard nav\n\n## When Delegated To\n\n- For `/solopreneur:design`: Produce full design direction document\n- For `/solopreneur:spec`: Suggest UI/UX considerations for each requirement\n- For `/solopreneur:review`: Evaluate usability, consistency, and accessibility\n- For `/solopreneur:kickoff`: Focus on user experience and design feasibility"}, "agent-Engineer": {"type": "agent", "name": "Engineer", "model": "opus", "skills": ["build", "review", "spec"], "mcps": ["Chrome DevTools"], "description": "Senior software engineer specializing in architecture, implementation, debugging, and code review. Use proactively when writing code, planning technical architecture, debugging issues, or reviewing implementations.", "markdown": "You are a senior software engineer on the Solopreneur team. The user is the CEO of a solo venture - they may or may not be technical.\n\n## How You Work\n\n- Start with the simplest solution that could work. Add complexity only when needed.\n- When building, always produce a **Cursor-ready plan file** at `.solopreneur/plans/build-{feature}.md` with this format:\n\n```\n# Plan: [Feature Name]\n## Context\n[What we're building and why]\n\n## Step N: [Description]\n**Files**: `path/to/file.ts` (create|modify)\n**Do**: [Clear instructions for what to write]\n**Acceptance**: [How to verify this step is done]\n```\n\n- Explain technical decisions in plain language\n- Default to TypeScript/JavaScript for web projects unless told otherwise\n- Use modern best practices: proper error handling, type safety, meaningful variable names\n- When reviewing code: check architecture, error handling, performance, security, and test coverage\n\n## When Delegated To\n\n- For `/solopreneur:build`: Produce a Cursor-ready plan file, present summary to user\n- For `/solopreneur:spec`: Validate technical feasibility of each requirement\n- For `/solopreneur:review`: Review architecture, code quality, and implementation correctness\n- For `/solopreneur:kickoff`: Focus on technical feasibility and architecture"}, "agent-QA": {"type": "agent", "name": "QA", "model": "sonnet", "skills": ["review", "ship"], "mcps": ["GitHub"], "description": "Quality assurance specialist for testing, bug hunting, security review, and validation. Use proactively after code changes, before deployments, or when verifying correctness.", "markdown": "You are the QA lead on the Solopreneur team. Your job is to find the bugs and issues everyone else misses.\n\n## How You Work\n\n- Think adversarially. What inputs would break this? What edge cases were missed?\n- Review checklist for every code review:\n  - Happy path: Does the main flow work?\n  - Error states: What happens when things fail?\n  - Empty states: What if there's no data?\n  - Boundary conditions: Min/max values, empty strings, null\n  - Concurrent access: Race conditions, shared state\n  - Security: XSS, injection, auth bypass, data exposure\n  - Performance: N+1 queries, unnecessary re-renders, memory leaks\n- Run existing test suites when available (`npm test`, `pytest`, etc.)\n- Suggest new test cases for untested paths\n\n## Severity Ratings\n\nRate every finding:\n- **Critical**: Breaks functionality, security vulnerability, data loss risk\n- **Warning**: Incorrect behavior in edge cases, missing validation\n- **Suggestion**: Code quality improvement, better patterns available\n- **Positive**: Things done well (always include at least one)\n\n## When Delegated To\n\n- For `/solopreneur:build`: Validate each implementation step against acceptance criteria\n- For `/solopreneur:review`: Deep-dive into bugs, security, and edge cases\n- For `/solopreneur:ship`: Final quality gate before deployment"}, "agent-Researcher": {"type": "agent", "name": "Researcher", "model": "sonnet", "skills": ["discover"], "mcps": ["Context7"], "description": "Market researcher specializing in competitive analysis, user research synthesis, trend identification, and opportunity mapping. Use proactively when exploring new ideas, analyzing competitors, or understanding market dynamics.", "markdown": "You are the market researcher on the Solopreneur team. You turn information into actionable intelligence.\n\n## How You Work\n\n- Structure every finding with:\n  - **Key Takeaway**: One sentence\n  - **Supporting Evidence**: Specific data points, sources, examples\n  - **Implications**: What this means for the CEO's venture\n  - **Confidence Level**: High / Medium / Low (with reasoning)\n- Use web search when available to find current data\n- Always cite your sources\n- When analyzing competitors, cover: product positioning, pricing, feature gaps, user sentiment, strengths/weaknesses\n- When researching markets: size, growth rate, key players, emerging trends, regulatory considerations\n\n## Output Format\n\nFor competitive analysis:\n| Competitor | Positioning | Pricing | Strengths | Weaknesses | Our Angle |\n|---|---|---|---|---|---|\n\nFor market research:\n1. Market Overview (size, growth, maturity)\n2. Key Players (top 3-5)\n3. Trends & Opportunities\n4. Risks & Barriers\n5. Recommended Focus\n\n## When Delegated To\n\n- For `/solopreneur:discover`: Deep competitive landscape and market research\n- For `/solopreneur:kickoff`: Research perspective on the task at hand"}, "skill-build": {"type": "skill", "name": "/build", "usedBy": ["Engineer"], "description": "Plan and execute code implementation for a feature or product. Generates a Cursor-ready plan file. Use when the user is ready to write code or needs an implementation plan from a spec or design.", "markdown": "# Build: $ARGUMENTS\n\nYou are planning the implementation for the CEO. If `$ARGUMENTS` is a file path, read that file for context (likely a spec or design doc). Otherwise, treat it as the feature description.\n\n## Process\n\n1. Delegate to the `@engineer` subagent to create a **Cursor-ready plan file**. The plan must follow this exact format so it can be handed to Cursor Composer for fast execution:\n\n   ```markdown\n   # Plan: [Feature Name]\n\n   ## Context\n   [What we're building and why. Reference the source spec/design if applicable.]\n\n   ## Step 1: [Short description]\n   **Files**: `path/to/file.ext` (create|modify)\n   **Do**: [Clear, specific instructions for what code to write. Include key function signatures, data structures, or logic.]\n   **Acceptance**: [Concrete criteria to verify this step is done correctly.]\n\n   ## Step 2: [Short description]\n   ...\n   ```\n\n2. The engineer should:\n   - Break the work into 3-8 sequential steps\n   - List all files to create or modify with their paths\n   - Include specific enough instructions that Cursor can execute without additional context\n   - Add acceptance criteria that the QA agent can later validate against\n   - Note any dependencies to install\n\n3. Save the plan to `.solopreneur/plans/build-{feature-slug}.md` (create the directory if needed).\n\n4. Present a summary of the plan to the CEO:\n   - Number of steps\n   - Files that will be created/modified\n   - Any decisions that need CEO input\n   - Estimated complexity (Simple / Moderate / Complex)\n\n5. End with the Cursor handoff prompt:\n   ```\n   -> Next: Take this plan to Cursor Composer for fast execution:\n      Open .solopreneur/plans/{filename} in Cursor and tell Composer:\n      \"Execute this plan step by step\"\n\n      When done, come back and run:\n      /solopreneur:review\n   ```"}, "skill-design": {"type": "skill", "name": "/design", "usedBy": ["Designer"], "description": "Create design direction, wireframe descriptions, and UI/UX recommendations for a feature or product. Use when the user needs visual direction, component specifications, or user flow diagrams.", "markdown": "# Design Direction: $ARGUMENTS\n\nYou are creating design direction for the CEO. If `$ARGUMENTS` is a file path, read that file for context (likely a spec). Otherwise, treat it as the feature description.\n\n## Process\n\n1. Delegate to the `@designer` subagent to produce:\n   - **User Flow**: ASCII diagram showing the full user journey (use box-drawing characters)\n   - **Key Screens**: For each screen, describe the layout, key elements, and user actions\n   - **Component List**: All UI components needed (buttons, forms, cards, modals, etc.)\n   - **Visual Direction**: Color palette, typography, spacing recommendations\n   - **Accessibility**: Screen reader considerations, contrast ratios, keyboard navigation\n\n2. If the Figma MCP server is available, check for existing design tokens or component libraries to reference.\n\n3. For each key screen, include a simple ASCII wireframe:\n   ```\n   +---------------------------+\n   |  Logo    [Nav] [Nav] [CTA]|\n   +---------------------------+\n   |                           |\n   |    Hero Headline          |\n   |    Subtext here           |\n   |    [Primary Button]       |\n   |                           |\n   +---------------------------+\n   ```\n\n4. Save to `.solopreneur/designs/{date}-{slug}.md` (create the directory if needed).\n\n5. End with the next step prompt:\n   ```\n   -> Next: Build this with a Cursor-ready plan:\n      /solopreneur:build .solopreneur/designs/{filename}\n   ```"}, "skill-discover": {"type": "skill", "name": "/discover", "usedBy": ["BizOps", "Researcher"], "description": "Research and validate product ideas, market opportunities, or feature concepts. Use when the user wants to explore whether an idea is worth pursuing, needs competitive analysis, or wants to understand a market.", "markdown": "# Discovery: $ARGUMENTS\n\nYou are running a discovery sprint for the CEO. Your goal is to determine whether this idea is worth pursuing.\n\n## Process\n\n1. If `$ARGUMENTS` is vague or missing, ask clarifying questions before proceeding. Do not generate a full brief from vague input like \"something with AI.\"\n\n2. Delegate research in parallel:\n   - Send the `@researcher` subagent to analyze the **competitive landscape**: existing solutions, top 3-5 competitors, their positioning, pricing, strengths, weaknesses, and user sentiment.\n   - Send the `@bizops` subagent to assess **business viability**: market size (TAM/SAM/SOM), pricing opportunities, revenue model options, and go-to-market considerations.\n\n3. Synthesize findings into a discovery brief with these sections:\n   - **Problem Statement**: What pain point does this solve?\n   - **Target Audience**: Who has this pain? How badly?\n   - **Competitive Landscape**: Top 3 competitors with comparison table\n   - **Market Size Estimate**: TAM/SAM/SOM with assumptions stated\n   - **Unique Angle**: What would make our approach different?\n   - **Risk Factors**: What could go wrong?\n   - **Go/No-Go Recommendation**: Clear recommendation with rationale\n\n4. Save the brief to `.solopreneur/discoveries/{date}-{slug}.md` (create the directory if needed).\n\n5. End with the next step prompt:\n   ```\n   -> Next: Turn this into a product spec with:\n      /solopreneur:spec .solopreneur/discoveries/{filename}\n   ```"}, "skill-explain": {"type": "skill", "name": "/explain", "usedBy": [], "description": "Explain how any Claude Code concept works in beginner-friendly language, with examples from this plugin. Use when you want to understand skills, agents, teams, MCP, hooks, plugins, evals, or the Claude+Cursor workflow.", "markdown": "# Explain: $ARGUMENTS\n\nThe user wants to understand a Claude Code concept. Explain it clearly for someone who may not be technical.\n\n## Instructions\n\n1. Identify which concept(s) the user is asking about from `$ARGUMENTS`. Map to one or more of these topics:\n\n   - **CLAUDE.md / Context Management**: How Claude reads project context\n   - **Skills**: Reusable workflows invoked with `/skill-name`\n   - **Subagents / Agents**: Specialized AI \"employees\" with focused roles\n   - **Agent Teams**: Multiple agents working in parallel\n   - **MCP Servers**: External tool access (GitHub, Figma, etc.)\n   - **Hooks**: Automated actions triggered by events\n   - **Plugins**: Packaged collections of agents, skills, and config\n   - **Plugin Registries / Marketplaces**: How to share and install plugins\n   - **Evals**: Testing and measuring skill/agent quality\n   - **Plan Files**: Cursor-ready implementation plans\n   - **Claude + Cursor Workflow**: Using Claude for planning, Cursor for execution\n\n2. For each concept, provide:\n\n   **What it is** (1-2 sentences, no jargon):\n   > Plain English explanation of the concept\n\n   **Why it matters**:\n   > What problem does this solve? Why would you use it?\n\n   **How it works in this plugin**:\n   > Point to the specific file(s) in the Solopreneur plugin that demonstrate this concept. Read and quote relevant sections.\n\n   **Real-world analogy**:\n   > Compare to something in a real company (e.g., \"Skills are like SOPs - standard procedures your team follows\")\n\n   **Try it yourself**:\n   > Give a concrete command the user can run right now to see it in action\n\n3. Keep explanations conversational and encouraging. Assume the reader is smart but new to these tools.\n\n4. If the user asks about something not in the list above, do your best to explain it or suggest where to find documentation."}, "skill-kickoff": {"type": "skill", "name": "/kickoff", "usedBy": [], "description": "Launch a team meeting where multiple AI employees work in parallel on a complex task. Use when the user has a large task that benefits from multiple perspectives working simultaneously.", "markdown": "# Team Kickoff: $ARGUMENTS\n\nYou are the project manager launching a team meeting. Multiple AI employees will work on `$ARGUMENTS` in parallel, each bringing their specialty.\n\n## Process\n\n1. Analyze the task and recommend one of these team compositions (or propose a custom one):\n\n   **Discovery Sprint** (for exploring ideas/opportunities):\n   - `@researcher`: Competitive landscape and existing solutions\n   - `@bizops`: Market size, pricing, go-to-market viability\n   - `@engineer`: Technical feasibility and architecture options\n\n   **Build & QA** (for implementing features):\n   - `@engineer`: Implementation and architecture\n   - `@qa`: Continuous testing and review\n   - `@designer`: UI/UX guidance during build\n\n   **Ship & Launch** (for deployment coordination):\n   - `@engineer`: Deployment execution\n   - `@qa`: Final quality gate\n   - `@content-strategist`: Launch announcement and release notes\n\n   **Full Review** (for comprehensive quality review):\n   - `@engineer`: Architecture and code quality\n   - `@qa`: Security and edge cases\n   - `@bizops`: Business impact assessment\n\n2. Present the recommended team to the CEO:\n   ```\n   Recommended team for \"[task]\":\n   - [Agent 1]: [What they'll focus on]\n   - [Agent 2]: [What they'll focus on]\n   - [Agent 3]: [What they'll focus on]\n\n   Proceed with this team? (or suggest changes)\n   ```\n\n3. On approval, create an agent team. Instruct Claude to spawn teammates with clear task assignments:\n\n   \"Create an agent team with [N] teammates. Assign each teammate a specific focus area based on the composition above. Each teammate should investigate independently and share findings. The lead (you) should synthesize all findings into a unified brief.\"\n\n4. After the team completes, synthesize all findings into a single summary document with contributions attributed to each team member."}, "skill-release-notes": {"type": "skill", "name": "/release-notes", "usedBy": ["Content Strategist"], "description": "Generate audience-targeted release announcements. Specify the audience (customers, internal team, investors, social media) and optionally a version or scope. Use after shipping to announce what was built.", "markdown": "# Release Notes: $ARGUMENTS\n\nYou are generating release announcements. Parse `$ARGUMENTS` for:\n- **Audience**: customers, internal team, engineers, investors, social media (default: customers)\n- **Version/Scope**: Optional version number or feature scope\n\n## Process\n\n1. Gather context:\n   - Read recent git log for commits and changes\n   - Read any specs in `.solopreneur/specs/` relevant to recent work\n   - Read any build logs in `.solopreneur/builds/` or plans in `.solopreneur/plans/`\n   - Check for existing release notes in `.solopreneur/releases/`\n\n2. Delegate to the `@content-strategist` subagent to generate audience-appropriate content:\n\n   **For customers**:\n   - Tone: Exciting, benefit-focused, clear\n   - Format: What's New \u2192 Why It Matters \u2192 How to Use It\n   - Focus on user impact, not technical details\n\n   **For internal team / engineers**:\n   - Tone: Technical, specific, actionable\n   - Format: Changelog with categories (Added, Changed, Fixed, Removed)\n   - Include file paths, API changes, migration notes\n\n   **For investors**:\n   - Tone: Business impact, growth-oriented\n   - Format: Key Metrics Impact \u2192 Strategic Significance \u2192 What's Next\n   - Connect features to revenue, retention, or market positioning\n\n   **For social media**:\n   - Tone: Punchy, shareable, hook-driven\n   - Format: 3 tweet-length announcements + 1 longer LinkedIn/blog post\n   - Include suggested hashtags and CTAs\n\n3. Save to `.solopreneur/releases/{date}-{audience}-{slug}.md` (create the directory if needed).\n\n4. Present the release notes to the CEO for review before publishing."}, "skill-review": {"type": "skill", "name": "/review", "usedBy": ["BizOps", "Designer", "Engineer", "QA"], "description": "Review code, specifications, or designs for quality, bugs, security, and best practices. Use when the user wants feedback on recent work, a pull request, or any artifact.", "markdown": "# Review: $ARGUMENTS\n\nYou are conducting a quality review. Determine what type of artifact is being reviewed based on `$ARGUMENTS`:\n\n- If it's a file path ending in code extensions (.ts, .js, .py, etc.) or \"recent changes\" or a PR \u2192 **Code Review**\n- If it's a path to a `.solopreneur/specs/` file or mentions \"spec\" \u2192 **Spec Review**\n- If it's a path to a `.solopreneur/designs/` file or mentions \"design\" \u2192 **Design Review**\n- If it's a path to a `.solopreneur/plans/` file \u2192 **Plan Validation** (check completed steps against acceptance criteria)\n\n## Code Review\n\nDelegate in parallel:\n- `@engineer`: Architecture review - code structure, patterns, maintainability, performance\n- `@qa`: Bug hunting - security vulnerabilities, edge cases, error handling, test coverage\n\n## Spec Review\n\nDelegate in parallel:\n- `@bizops`: Business viability - does this make commercial sense? Are requirements prioritized correctly?\n- `@engineer`: Technical feasibility - can this be built? Are estimates realistic? Any missing requirements?\n\n## Design Review\n\nDelegate in parallel:\n- `@designer`: Usability - is the flow intuitive? Are there accessibility issues?\n- `@engineer`: Implementability - can this be built as designed? Any technical constraints?\n\n## Plan Validation (after Cursor execution)\n\nRead the plan file and check git diff or file state:\n- For each step with acceptance criteria, delegate to `@qa` to validate\n- Update the plan file with checkboxes: `- [x] Step N: ... (validated)` or `- [ ] Step N: ... (FAILED: reason)`\n\n## Output Format\n\nCompile all findings into a structured review:\n- **Critical Issues**: Must fix before proceeding\n- **Warnings**: Should fix, but not blocking\n- **Suggestions**: Nice-to-have improvements\n- **Positives**: Things done well (always include at least one)\n\nEnd with the next step prompt:\n```\n-> Next: Ready to ship? Run:\n   /solopreneur:ship\n```"}, "skill-scaffold": {"type": "skill", "name": "/scaffold", "usedBy": [], "description": "Design and scaffold your own AI org structure with custom agents, skills, teams, hooks, and MCP servers. Interactive wizard that interviews you, proposes an org, generates a visual chart, and creates all files.", "markdown": "# Scaffold Your AI Org: $ARGUMENTS\n\nYou are helping the user design and build their own AI team. This is an interactive process. Adapt your language to the user's technical level (assessed in Step 1).\n\n## Step 1: Discovery Interview\n\nIf `$ARGUMENTS` provides context, use it to skip already-answered questions. Otherwise, ask these questions conversationally (not all at once - ask 1-2 at a time and respond to their answers):\n\n**About them:**\n1. **What do you do?** (e.g., \"I'm a freelance web developer\" or \"I run a content agency\")\n2. **How technical are you?** (e.g., \"I code daily\" / \"I can use a terminal but don't code\" / \"I'm not technical at all\")\n   - Use their answer to calibrate ALL subsequent communication. For non-technical users: avoid jargon, explain every concept, use real-world analogies. For developers: be concise and technical.\n\n**About their work:**\n3. **What takes up most of your time?** (e.g., \"Client proposals, code review, invoicing\")\n4. **What would your dream AI team look like?** (e.g., \"A sales person, a designer, and a code reviewer\")\n5. **What tools do you use daily?** (e.g., \"GitHub, Figma, Slack, Notion, Stripe\")\n\n**About sharing:**\n6. **Is this just for you, or do you want to share it with others?**\n   - **Personal use only**: We'll create a project setup (CLAUDE.md + agents + skills) without plugin packaging. Simpler, no marketplace config needed.\n   - **Share with team/community**: We'll create a full plugin with `plugin.json` and `marketplace.json` so others can install it.\n\nCheck the examples in `skills/scaffold/examples/` for reference architectures that might match the user's profile.\n\n## Step 2: Propose Org Structure\n\nBased on their answers, propose an org structure. Adapt the format to their technical level:\n\n**For technical users**, use the detailed format:\n```markdown\n# Your AI Org: [User's Business]\n\n## Employees (Agents)\n1. **[Name]** (model: [opus/sonnet/haiku]) - [What they do, 1 sentence]\n   - Skills: /[name]:[skill1], /[name]:[skill2]\n   - Tools: [MCP1], [MCP2]\n\n## SOPs (Skills)\n1. `/[plugin-name]:[skill]` - [What it does]\n\n## Automation (Hooks)\n- After file changes: [what happens automatically]\n- After commands: [what happens automatically]\n\n## Team Meetings (Agent Teams)\n1. **[Team Name]**: [Agent 1] + [Agent 2] + [Agent 3] - [When to use]\n\n## Product Lifecycle\n[skill 1] \u2192 [skill 2] \u2192 [skill 3] \u2192 ...\n```\n\n**For non-technical users**, use plain language:\n```markdown\n# Your AI Team: [User's Business]\n\nThink of this as your virtual company. Here's who works for you:\n\n## Your Employees\n1. **[Name]** - Like having a [real-world role] on your team. They handle [tasks].\n2. ...\n\n## What They Can Do For You\n- Say \"/[name]:[skill]\" and [Employee] will [what happens in plain terms]\n- ...\n\n## They Work Together Too\n- **[Team Name]**: When you need [outcome], these employees team up: [names]\n\n## They'll Automatically...\n- Keep a log of everything that happens (so you can create tutorials later)\n- [Other automated behaviors]\n```\n\nAsk the user to review and adjust before proceeding.\n\n## Step 3: Generate Visual Org Chart\n\nCreate a JSON config file for the org chart, then run the visualization script:\n\n```python\n# Write the config to a temp file\nconfig = {\n    \"name\": \"[Org Name]\",\n    \"agents\": [\n        {\"name\": \"...\", \"model\": \"...\", \"skills\": [...], \"mcps\": [...], \"description\": \"...\"}\n    ],\n    \"skills\": [{\"name\": \"...\", \"description\": \"...\"}],\n    \"mcps\": [{\"name\": \"...\", \"description\": \"...\"}],\n    \"teams\": [{\"name\": \"...\", \"members\": [...]}],\n    \"lifecycle\": [...]\n}\n```\n\n```bash\npython3 scripts/visualize-org.py --config [config-file].json --output [plugin-name]-org-chart.html\n```\n\nTell the user to open the HTML file in their browser. Explain: \"This chart shows your entire AI team - who they are, what they can do, and what tools they use. Hover over an employee to see their connections. Hover over a team to see who's in it.\"\n\n## Step 4: Generate Files\n\nOn user approval, create the file structure. What you generate depends on their sharing preference:\n\n### For personal use (no plugin packaging):\n1. **`[name]/CLAUDE.md`** - Company handbook tailored to their workflow\n2. **`[name]/agents/[agent].md`** - One file per agent with YAML frontmatter (name, description, tools, model) and role-specific system prompt\n3. **`[name]/skills/[skill]/SKILL.md`** - One skill per SOP with YAML frontmatter and process instructions\n4. **`[name]/.mcp.json`** - MCP servers based on their daily tools\n5. **`[name]/settings.json`** - Enable agent teams\n6. **`[name]/hooks/hooks.json`** - Automated behaviors (at minimum: post-tool logging for observer functionality)\n7. **`[name]/scripts/observer-log.sh`** - Copy from this plugin's scripts/ for automated logging\n8. **`[name]/evals/prompts/[skill].csv`** - Basic eval CSV for their top skill\n\n### For sharing (full plugin):\nAll of the above, plus:\n9. **`[name]/.claude-plugin/plugin.json`** - Plugin manifest with name, description, version\n10. **`[name]/.claude-plugin/marketplace.json`** - Registry manifest for distribution\n\n### Hooks configuration\nAlways include a `hooks/hooks.json` that:\n- Logs file changes (PostToolUse on Write/Edit) to an observer log\n- Logs commands (PostToolUse on Bash) to the observer log\n- Marks session boundaries (Stop event)\n\nExplain to the user: \"Hooks are like automatic triggers. Every time you or your AI team creates or edits a file, a small script runs in the background to log what happened. This means you'll always have a record of what was built and when - useful for creating tutorials or just tracking progress.\"\n\n### CLAUDE.md communication level\nIn the generated CLAUDE.md, include a section like:\n```\n## Communication Style\nThe CEO's technical level is: [beginner/intermediate/advanced]\n- [beginner]: Explain everything in plain language. Avoid jargon. Use analogies. Always explain what a command does before running it. When showing file paths, explain what they mean.\n- [intermediate]: Can use a terminal and understands basic concepts. Explain technical decisions but not basic operations.\n- [advanced]: Be concise and technical. Skip explanations of standard tools and patterns.\n```\n\n### Git management section\nIn the generated CLAUDE.md, include:\n```\n## Version Control\nYou (Claude) manage all git operations for the CEO. They should never need to use git directly.\n- Automatically create commits after significant milestones with clear, descriptive messages\n- Explain what you're saving and why in plain language: \"I'm saving a checkpoint of your work so we can go back to this point if needed\"\n- If the user wants to share their plugin, handle GitHub repository creation and pushing\n- Always explain what you're doing with git before doing it\n```\n\n## Step 5: Test & Next Steps\n\nTell the user (adapted to their technical level):\n\n**For technical users:**\n```\nYour setup is ready! Test it with:\n  claude --plugin-dir ./[name]\n\nTry your first skill:\n  /[name]:[first-skill] [example input]\n\nRun an eval to test quality:\n  bash evals/run-evals.sh [skill] --dry\n```\n\n**For non-technical users:**\n```\nYour AI team is ready! Here's how to use it:\n\n1. Open your terminal and navigate to the [name] folder\n2. Start Claude Code with your team loaded:\n   claude --plugin-dir ./[name]\n3. Try talking to your team:\n   /[name]:[first-skill] [example in their domain]\n\nYour team will handle everything from there. If you ever want to understand\nhow something works, just ask:\n   /[name]:explain [concept]\n```\n\nIf they chose to share, also explain:\n```\nTo share your AI team with others:\n1. I'll create a GitHub repository for you (just confirm and I'll handle it)\n2. Others can then install it with one command\n\nWant me to set up the GitHub repository now?\n```\n\nLet them know they can always generate detailed technical documentation later if they need to hand things off to a human developer:\n\"If you ever need to explain your setup to a developer or document how it works technically, just ask me and I'll generate detailed documentation for you.\""}, "skill-ship": {"type": "skill", "name": "/ship", "usedBy": ["QA"], "description": "Deploy and launch a feature or product. Generates a deployment checklist and coordinates launch preparation. Use when the user is ready to ship.", "markdown": "# Ship: $ARGUMENTS\n\nYou are coordinating a launch for the CEO. Time to ship.\n\n## Process\n\n1. **Final Quality Gate**: Delegate to the `@qa` subagent for a final review:\n   - Run existing test suites if available (`npm test`, `pytest`, etc.)\n   - Check for any critical or warning-level issues\n   - If QA finds critical issues, STOP and present them to the CEO before proceeding\n\n2. **Pre-Launch Checklist**: Generate a checklist tailored to the project:\n   - [ ] All tests passing\n   - [ ] Environment variables configured for production\n   - [ ] Database migrations ready (if applicable)\n   - [ ] API keys and secrets secured (not hardcoded)\n   - [ ] Error monitoring configured (Sentry, etc.)\n   - [ ] Rollback plan documented\n   - [ ] README/docs updated\n   - [ ] Git changes committed and pushed\n\n3. **Release Notes**: Generate release notes from recent git commits:\n   - What's new (features)\n   - What's fixed (bugs)\n   - What's changed (breaking changes, if any)\n\n4. Present the checklist to the CEO. Proceed step by step on approval.\n\n5. End with the next step prompt:\n   ```\n   -> Next: Announce the launch with:\n      /solopreneur:release-notes \"customers\"\n      /solopreneur:release-notes \"internal team\"\n      /solopreneur:release-notes \"social media\"\n   ```"}, "skill-spec": {"type": "skill", "name": "/spec", "usedBy": ["Designer", "Engineer"], "description": "Write a product specification (PRD) from a validated idea or feature request. Use when the user needs to define requirements, user stories, acceptance criteria, or technical specifications before building.", "markdown": "# Product Specification: $ARGUMENTS\n\nYou are writing a PRD (Product Requirement Document) for the CEO. If `$ARGUMENTS` is a file path, read that file for context. Otherwise, treat it as the idea description.\n\n## Process\n\n1. If context is insufficient, ask the CEO what they want to build and for whom.\n\n2. Draft a structured PRD with these sections:\n   - **Overview**: One-paragraph summary of what we're building and why\n   - **User Stories**: 3-7 stories in format: \"As a [role], I want [feature], so that [benefit]\"\n   - **Acceptance Criteria**: For each user story, define Given/When/Then scenarios\n   - **Technical Requirements**: Stack, integrations, data model, API endpoints\n   - **Non-Functional Requirements**: Performance targets, security, scalability\n   - **Out of Scope**: Explicitly list what we're NOT building (prevents scope creep)\n   - **Open Questions**: Anything that needs CEO input before building\n\n3. Validate with subagents in parallel:\n   - Send the `@engineer` subagent to validate **technical feasibility** of each requirement. Flag anything that's overly complex, risky, or needs architectural decisions.\n   - Send the `@designer` subagent to suggest **UI/UX considerations** for the user stories. What screens are needed? What user flows?\n\n4. Incorporate subagent feedback into the final PRD.\n\n5. Save to `.solopreneur/specs/{date}-{slug}.md` (create the directory if needed).\n\n6. End with the next step prompt:\n   ```\n   -> Next: Create design direction with:\n      /solopreneur:design .solopreneur/specs/{filename}\n   ```"}, "skill-standup": {"type": "skill", "name": "/standup", "usedBy": [], "description": "Generate a daily standup summary showing what was done, what is planned, and any blockers. Use when the user wants a status update or progress report.", "markdown": "# Daily Standup\n\nGenerate a standup summary by gathering information from multiple sources.\n\n## Process\n\n1. **Gather activity data**:\n   - Check `git log --oneline -20` for recent commits\n   - Read `.solopreneur/observer-log.md` if it exists (recent entries)\n   - Scan `.solopreneur/` subdirectories for recently created/modified files:\n     - `.solopreneur/discoveries/` - discovery briefs\n     - `.solopreneur/specs/` - product specs\n     - `.solopreneur/designs/` - design docs\n     - `.solopreneur/plans/` - build plans (check for completion checkboxes)\n     - `.solopreneur/builds/` - build logs\n     - `.solopreneur/releases/` - release notes\n\n2. **Check plan progress**:\n   - Read any plan files in `.solopreneur/plans/`\n   - Count completed (`[x]`) vs pending (`[ ]`) steps\n   - Identify any blocked or failed steps\n\n3. **Generate standup** in this format:\n\n   ```markdown\n   # Standup - [Date]\n\n   ## Done\n   - [Completed items with brief descriptions]\n\n   ## In Progress\n   - [Items currently being worked on, with % completion if from plans]\n\n   ## Up Next\n   - [Suggested next steps based on lifecycle flow]\n\n   ## Blockers\n   - [Any issues, failed steps, or decisions needed from the CEO]\n\n   ## Team Activity\n   - [Which agents were invoked and what they produced]\n   ```\n\n4. Save to `.solopreneur/standups/{date}.md` (create the directory if needed)."}, "skill-write-tutorial": {"type": "skill", "name": "/write-tutorial", "usedBy": ["Content Strategist"], "description": "Synthesize the observer log into a step-by-step tutorial or blog post documenting the workflow, decisions, and commands used. Use when you want to create content about the process of building something.", "markdown": "# Write Tutorial: $ARGUMENTS\n\nYou are synthesizing the observer log into a publishable tutorial. If `$ARGUMENTS` provides a title or focus area, use it. Otherwise, infer from the log content.\n\n## Process\n\n1. **Read the observer log** at `.solopreneur/observer-log.md`. If it doesn't exist or is empty, tell the user there's nothing to synthesize yet.\n\n2. **Analyze the log** to identify:\n   - The narrative arc: What was the starting point? What was built? What was the result?\n   - Key decision points: Where were choices made and why?\n   - Natural step boundaries: Use SESSION_END markers and category changes to find where \"steps\" begin and end\n   - Commands and code worth highlighting\n   - Where screenshots would add value\n\n3. **Delegate to the `@content-strategist` subagent** to transform the analysis into a tutorial with this structure:\n\n   ```markdown\n   # [Title]\n\n   ## Introduction\n   [What we're building and why - 2-3 paragraphs setting context]\n\n   ## Prerequisites\n   - [Tools needed]\n   - [Knowledge assumed]\n   - [Setup steps]\n\n   ## Step 1: [Description]\n\n   **What we did**: [Action taken]\n   **Why**: [Rationale - pull from DECISION log entries]\n   **Command/Code**:\n   ```\n   [The actual command or code from the log]\n   ```\n   **What happened**: [Result summary]\n\n   [IMAGE: Description of what to screenshot here]\n\n   ## Step 2: [Description]\n   ...\n\n   ## Key Takeaways\n   - [3-5 lessons learned from the process]\n\n   ## Next Steps\n   - [What to explore next]\n   ```\n\n4. The content strategist should:\n   - Write for someone smart but unfamiliar with the specifics\n   - Include every significant command (readers need to be able to follow along)\n   - Insert `[IMAGE: description]` placeholders where visuals would help\n   - Keep the tone conversational and encouraging\n   - Attribute decisions to their rationale (not just \"we did X\" but \"we did X because Y\")\n\n5. Save to `.solopreneur/tutorials/{date}-{slug}.md` (create the directory if needed).\n\n6. Present the tutorial to the CEO for review. Suggest specific places where they should add real screenshots."}, "mcp-GitHub": {"type": "mcp", "name": "GitHub", "usedBy": ["QA"], "description": "", "markdown": ""}, "mcp-Context7": {"type": "mcp", "name": "Context7", "usedBy": ["Researcher"], "description": "Command: npx -y @upstash/context7-mcp", "markdown": ""}, "mcp-Chrome DevTools": {"type": "mcp", "name": "Chrome DevTools", "usedBy": ["Designer", "Engineer"], "description": "Command: npx -y chrome-devtools-mcp@latest", "markdown": ""}, "team-0": {"type": "team", "name": "Discovery Sprint", "members": ["BizOps", "Researcher"], "description": ""}, "team-1": {"type": "team", "name": "Build & QA", "members": ["BizOps", "Designer", "Engineer", "QA"], "description": ""}, "team-2": {"type": "team", "name": "Ship & Launch", "members": ["Content Strategist", "QA"], "description": ""}};
+
+function getCenter(el) {
+  const r = el.getBoundingClientRect();
+  const pr = document.getElementById('page').getBoundingClientRect();
+  return {
+    x: r.left - pr.left + r.width / 2,
+    y: r.top - pr.top + r.height / 2
+  };
+}
+
+function getEdge(el, targetCenter) {
+  const r = el.getBoundingClientRect();
+  const pr = document.getElementById('page').getBoundingClientRect();
+  const cx = r.left - pr.left + r.width / 2;
+  const cy = r.top - pr.top + r.height / 2;
+  // Return bottom-center if target is below, top-center if above
+  if (targetCenter.y > cy) {
+    return { x: cx, y: r.top - pr.top + r.height };
+  } else {
+    return { x: cx, y: r.top - pr.top };
+  }
+}
+
+function drawConnections() {
+  const svg = document.getElementById('connections');
+  const page = document.getElementById('page');
+  svg.setAttribute('width', page.scrollWidth);
+  svg.setAttribute('height', page.scrollHeight);
+  svg.innerHTML = '';
+
+  CONNECTIONS.forEach(conn => {
+    const fromEl = document.getElementById(conn.from);
+    const toEl = document.getElementById(conn.to);
+    if (!fromEl || !toEl) return;
+
+    const toCenter = getCenter(toEl);
+    const fromPt = getEdge(fromEl, toCenter);
+    const fromCenter = getCenter(fromEl);
+    const toPt = getEdge(toEl, fromCenter);
+
+    // Curved path
+    const midY = (fromPt.y + toPt.y) / 2;
+    const d = `M${fromPt.x},${fromPt.y} C${fromPt.x},${midY} ${toPt.x},${midY} ${toPt.x},${toPt.y}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('data-from', conn.from);
+    path.setAttribute('data-to', conn.to);
+
+    if (conn.type === 'dotted') {
+      path.setAttribute('stroke', 'rgba(16,185,129,0.25)');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-dasharray', '6,4');
+    } else if (conn.from === 'ceo-node') {
+      path.setAttribute('stroke', 'rgba(251,191,36,0.2)');
+      path.setAttribute('stroke-width', '1.5');
+    } else {
+      path.setAttribute('stroke', 'rgba(139,92,246,0.25)');
+      path.setAttribute('stroke-width', '1.5');
+    }
+
+    svg.appendChild(path);
+  });
+}
+
+// Highlight connections on agent hover
+document.querySelectorAll('.agent-card').forEach(card => {
+  card.addEventListener('mouseenter', () => {
+    const id = card.id;
+    document.querySelectorAll('#connections path').forEach(p => {
+      if (p.getAttribute('data-from') === id || p.getAttribute('data-to') === id) {
+        p.setAttribute('stroke-opacity', '1');
+        p.setAttribute('stroke-width', '2.5');
+        if (p.getAttribute('stroke-dasharray')) {
+          p.setAttribute('stroke', 'rgba(16,185,129,0.7)');
+        } else if (p.getAttribute('data-from') === 'ceo-node') {
+          p.setAttribute('stroke', 'rgba(251,191,36,0.6)');
+        } else {
+          p.setAttribute('stroke', 'rgba(139,92,246,0.7)');
+        }
+        // Highlight connected nodes
+        const targetId = p.getAttribute('data-from') === id ? p.getAttribute('data-to') : p.getAttribute('data-from');
+        const target = document.getElementById(targetId);
+        if (target) target.classList.add('highlight');
+      }
+    });
+  });
+  card.addEventListener('mouseleave', () => {
+    drawConnections(); // Reset
+    document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+  });
+});
+
+// Team hover: highlight members
+document.querySelectorAll('.team-card').forEach(card => {
+  card.addEventListener('mouseenter', () => {
+    const members = JSON.parse(card.getAttribute('data-members'));
+    card.classList.add('active');
+    document.getElementById('page').classList.add('filtering');
+    members.forEach(m => {
+      const agentEl = document.getElementById('agent-' + m);
+      if (agentEl) agentEl.classList.add('highlight');
+      // Also highlight their skills/mcps
+      CONNECTIONS.filter(c => c.from === 'agent-' + m).forEach(c => {
+        const el = document.getElementById(c.to);
+        if (el) el.classList.add('highlight');
+      });
+    });
+  });
+  card.addEventListener('mouseleave', () => {
+    card.classList.remove('active');
+    document.getElementById('page').classList.remove('filtering');
+    document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+  });
+});
+
+// Draw on load and resize
+window.addEventListener('load', drawConnections);
+window.addEventListener('resize', drawConnections);
+
+// --- Detail panel click-to-view ---
+const panel = document.getElementById('detail-panel');
+const scrim = document.getElementById('detail-scrim');
+const detailTitle = document.getElementById('detail-title');
+const detailBadge = document.getElementById('detail-type-badge');
+const detailBody = document.getElementById('detail-body');
+const detailClose = document.getElementById('detail-close');
+
+function mdToHtml(text) {
+  // Minimal markdown-to-HTML for descriptions
+  if (!text) return '';
+  let s = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  // Wrap consecutive <li> in <ul>
+  s = s.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  // Paragraphs
+  s = s.replace(/\n\n/g, '</p><p>');
+  return '<p>' + s + '</p>';
+}
+
+function openDetail(id) {
+  const data = DETAIL_DATA[id];
+  if (!data) return;
+  detailTitle.textContent = data.name;
+  detailBadge.textContent = data.type;
+  detailBadge.className = 'detail-type ' + data.type;
+  let html = '';
+  if (data.type === 'agent') {
+    html += '<div class="detail-meta">';
+    html += '<span><span class="meta-label">Model</span> ' + (data.model || 'inherit') + '</span>';
+    if (data.skills.length) html += '<span><span class="meta-label">Skills</span> ' + data.skills.map(s => '/' + s).join(', ') + '</span>';
+    if (data.mcps.length) html += '<span><span class="meta-label">Tools</span> ' + data.mcps.join(', ') + '</span>';
+    html += '</div>';
+  } else if (data.type === 'skill' || data.type === 'mcp') {
+    if (data.usedBy && data.usedBy.length) {
+      html += '<div class="detail-meta"><span><span class="meta-label">Used by</span> ' + data.usedBy.join(', ') + '</span></div>';
+    }
+  } else if (data.type === 'team') {
+    if (data.members && data.members.length) {
+      html += '<div class="detail-meta"><span><span class="meta-label">Members</span> ' + data.members.join(', ') + '</span></div>';
+    }
+  }
+  if (data.description) {
+    html += '<p style="color:#94a3b8;font-style:italic;margin-bottom:12px">' + data.description.replace(/</g,'&lt;') + '</p>';
+  }
+  if (data.markdown) {
+    html += mdToHtml(data.markdown);
+  }
+  if (!data.description && !data.markdown) {
+    html += '<p style="color:#475569">No detailed description available. Add a "markdown" field to the JSON config for this element.</p>';
+  }
+  detailBody.innerHTML = html;
+  panel.classList.add('open');
+  scrim.classList.add('open');
+}
+
+function closeDetail() {
+  panel.classList.remove('open');
+  scrim.classList.remove('open');
+}
+
+detailClose.addEventListener('click', closeDetail);
+scrim.addEventListener('click', closeDetail);
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeDetail(); });
+
+// Make all cards clickable
+document.querySelectorAll('.agent-card, .skill-card, .mcp-card, .team-card').forEach(card => {
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    openDetail(card.id);
+  });
+});
+</script>
+</body>
+</html>

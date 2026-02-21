@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solopreneur - AI Org World</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f172a; overflow: hidden; font-family: monospace; }
+canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* Detail panel */
+#detail-panel {
+  position: fixed; top: 0; right: 0; width: 420px; max-width: 92vw; height: 100vh;
+  background: #0f172a; border-left: 2px solid #334155; z-index: 100;
+  transform: translateX(100%); transition: transform 0.25s ease;
+  display: flex; flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+}
+#detail-panel.open { transform: translateX(0); }
+#detail-scrim {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 99; display: none;
+}
+#detail-scrim.open { display: block; }
+.dp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #1e293b;
+}
+.dp-header h2 { color: #e2e8f0; font-size: 1rem; margin: 0; font-family: monospace; }
+.dp-badge {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
+  padding: 3px 8px; border-radius: 4px; margin-right: 10px; font-weight: 700;
+  font-family: monospace;
+}
+.dp-close {
+  background: none; border: none; color: #64748b; font-size: 1.4rem;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px; font-family: monospace;
+}
+.dp-close:hover { background: #1e293b; color: #e2e8f0; }
+.dp-body {
+  padding: 16px; overflow-y: auto; flex: 1;
+  font-size: 0.8rem; line-height: 1.6; color: #94a3b8; font-family: monospace;
+}
+.dp-section { margin-bottom: 16px; }
+.dp-section-title {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
+  color: #475569; margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 1px solid #1e293b;
+}
+.dp-info-row {
+  display: flex; justify-content: space-between; padding: 4px 0;
+  border-bottom: 1px solid #1e293b08;
+}
+.dp-info-label { color: #475569; font-size: 0.7rem; }
+.dp-info-value { color: #e2e8f0; font-size: 0.75rem; }
+.dp-tag {
+  display: inline-block; font-size: 0.65rem; padding: 2px 6px;
+  border-radius: 3px; margin: 2px 2px 2px 0;
+}
+.dp-tag-skill { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.dp-tag-mcp { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+.dp-tag-team { background: rgba(129,140,248,0.1); color: #a5b4fc; }
+
+/* Task list in panel */
+.task-item {
+  padding: 8px 10px; margin-bottom: 6px; border-radius: 6px;
+  background: #1e293b; border-left: 3px solid #475569;
+}
+.task-item.running { border-left-color: #fbbf24; }
+.task-item.thinking { border-left-color: #8b5cf6; }
+.task-item.done { border-left-color: #22c55e; opacity: 0.6; }
+.task-item.queued { border-left-color: #475569; opacity: 0.5; }
+.task-status {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.task-status.running { color: #fbbf24; }
+.task-status.thinking { color: #8b5cf6; }
+.task-status.done { color: #22c55e; }
+.task-status.queued { color: #475569; }
+.task-name { color: #e2e8f0; font-size: 0.75rem; margin-bottom: 2px; }
+.task-detail { color: #64748b; font-size: 0.65rem; }
+.task-progress {
+  height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px;
+  overflow: hidden;
+}
+.task-progress-bar {
+  height: 100%; border-radius: 2px; transition: width 0.3s;
+}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="detail-scrim"></div>
+<div id="detail-panel">
+  <div class="dp-header">
+    <div style="display:flex;align-items:center">
+      <span class="dp-badge" id="dp-badge"></span>
+      <h2 id="dp-title"></h2>
+    </div>
+    <button class="dp-close" id="dp-close">&times;</button>
+  </div>
+  <div class="dp-body" id="dp-body"></div>
+</div>
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+
+// Simulated task activities per agent
+const AGENT_TASKS = {
+  "Engineer": [
+    { name: "Reviewing PR #42 architecture", status: "running", detail: "/review — checking code patterns", progress: 65 },
+    { name: "Planning auth module refactor", status: "thinking", detail: "/build — evaluating JWT vs session", progress: 30 },
+    { name: "Updated API error handlers", status: "done", detail: "/build — added 4 error types", progress: 100 },
+    { name: "Spec validation: payment flow", status: "queued", detail: "/spec — waiting for BizOps input", progress: 0 },
+  ],
+  "Designer": [
+    { name: "Wireframing onboarding flow", status: "running", detail: "/design — 3 of 5 screens done", progress: 60 },
+    { name: "Reviewing color contrast (WCAG)", status: "thinking", detail: "/review — checking AA compliance", progress: 45 },
+    { name: "Component library audit", status: "done", detail: "/design — catalogued 24 components", progress: 100 },
+  ],
+  "BizOps": [
+    { name: "Analyzing competitor pricing", status: "running", detail: "/discover — scanning 5 competitors", progress: 40 },
+    { name: "TAM/SAM/SOM estimation", status: "thinking", detail: "/discover — modeling market size", progress: 20 },
+    { name: "Go-to-market draft v1", status: "done", detail: "/release-notes — launch strategy", progress: 100 },
+  ],
+  "QA": [
+    { name: "Running integration test suite", status: "running", detail: "/review — 127/203 tests passed", progress: 63 },
+    { name: "Security audit: input validation", status: "thinking", detail: "/review — checking XSS vectors", progress: 35 },
+    { name: "Edge case: empty cart checkout", status: "done", detail: "/ship — verified fix", progress: 100 },
+    { name: "Load test preparation", status: "queued", detail: "/ship — setting up k6 scripts", progress: 0 },
+  ],
+  "Researcher": [
+    { name: "Scraping competitor features", status: "running", detail: "/discover — Context7 deep dive", progress: 55 },
+    { name: "User sentiment analysis", status: "thinking", detail: "/discover — processing reviews", progress: 25 },
+    { name: "Trend report: AI tooling 2026", status: "done", detail: "/discover — 12 key findings", progress: 100 },
+  ],
+  "Content Strategist": [
+    { name: "Drafting launch announcement", status: "running", detail: "/release-notes — customer version", progress: 70 },
+    { name: "Tutorial: Getting Started guide", status: "thinking", detail: "/write-tutorial — outlining steps", progress: 15 },
+    { name: "Social media copy (5 posts)", status: "done", detail: "/release-notes — approved by CEO", progress: 100 },
+  ],
+};
+
+const AGENTS = [
+  { name:"Engineer", model:"opus", skills:["build","review","ship"],
+    mcps:["GitHub","Chrome DevTools"], desc:"Architecture & implementation",
+    zone:"build", color:"#3b82f6", darkColor:"#1e3a5f" },
+  { name:"Designer", model:"opus", skills:["design","review"],
+    mcps:["Chrome DevTools"], desc:"UI/UX & wireframes",
+    zone:"design", color:"#ec4899", darkColor:"#831843" },
+  { name:"BizOps", model:"opus", skills:["discover","release-notes"],
+    mcps:[], desc:"Market analysis & strategy",
+    zone:"discover", color:"#22c55e", darkColor:"#14532d" },
+  { name:"QA", model:"sonnet", skills:["review","ship"],
+    mcps:["GitHub","Chrome DevTools"], desc:"Testing & security",
+    zone:"review", color:"#f97316", darkColor:"#7c2d12" },
+  { name:"Researcher", model:"sonnet", skills:["discover"],
+    mcps:["Context7"], desc:"Competitive analysis & trends",
+    zone:"discover", color:"#8b5cf6", darkColor:"#3b0764" },
+  { name:"Content Strategist", model:"opus", skills:["release-notes","write-tutorial"],
+    mcps:[], desc:"Copy, tutorials & launch comms",
+    zone:"ship", color:"#06b6d4", darkColor:"#164e63" }
+];
+
+const LIFECYCLE = ["discover","spec","design","build","review","ship"];
+const ZONE_NAMES = {
+  discover: "Discovery Zone", spec: "Spec Zone", design: "Design Zone",
+  build: "Build Zone", review: "Review Zone", ship: "Ship Zone"
+};
+const TEAMS = [
+  { name: "Discovery Sprint", members: ["BizOps", "Researcher"] },
+  { name: "Build & QA", members: ["Engineer", "Designer", "QA"] },
+  { name: "Ship & Launch", members: ["Content Strategist", "QA"] }
+];
+
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const TILE = 16;
+const SCALE = 3;
+const TS = TILE * SCALE;
+const COLS = 52;
+const ROWS = 40;
+const WORLD_W = COLS * TILE;
+const WORLD_H = ROWS * TILE;
+
+// ═══════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// ═══════════════════════════════════════════
+// ZONE DEFINITIONS
+// ═══════════════════════════════════════════
+const ZONES = {
+  discover: { x:3,  y:3,  w:14, h:10, color:"#22c55e", darkColor:"#166534" },
+  spec:     { x:20, y:3,  w:14, h:10, color:"#a855f7", darkColor:"#6b21a8" },
+  design:   { x:35, y:3,  w:14, h:10, color:"#ec4899", darkColor:"#9d174d" },
+  build:    { x:3,  y:22, w:14, h:10, color:"#3b82f6", darkColor:"#1e40af" },
+  review:   { x:20, y:22, w:14, h:10, color:"#f97316", darkColor:"#9a3412" },
+  ship:     { x:35, y:22, w:14, h:10, color:"#06b6d4", darkColor:"#155e75" }
+};
+
+// ═══════════════════════════════════════════
+// TILEMAP
+// 0=grass, 1=path, 2=water, 3=zone floor,
+// 4=zone border (visual only, walkable),
+// 5=flowers, 6=tree
+// ═══════════════════════════════════════════
+const map = [];
+for (let y = 0; y < ROWS; y++) {
+  map[y] = [];
+  for (let x = 0; x < COLS; x++) map[y][x] = 0;
+}
+
+// Place zones
+for (const [key, z] of Object.entries(ZONES)) {
+  for (let dy = 0; dy < z.h; dy++) {
+    for (let dx = 0; dx < z.w; dx++) {
+      const tx = z.x + dx, ty = z.y + dy;
+      if (ty < ROWS && tx < COLS) {
+        map[ty][tx] = (dx === 0 || dx === z.w-1 || dy === 0 || dy === z.h-1) ? 4 : 3;
+      }
+    }
+  }
+}
+
+// Paths connecting zones horizontally (top row y=8,9)
+for (let x = ZONES.discover.x + ZONES.discover.w; x < ZONES.spec.x; x++) { map[8][x] = 1; map[9][x] = 1; }
+for (let x = ZONES.spec.x + ZONES.spec.w; x < ZONES.design.x; x++) { map[8][x] = 1; map[9][x] = 1; }
+// Paths connecting zones horizontally (bottom row y=27,28)
+for (let x = ZONES.build.x + ZONES.build.w; x < ZONES.review.x; x++) { map[27][x] = 1; map[28][x] = 1; }
+for (let x = ZONES.review.x + ZONES.review.w; x < ZONES.ship.x; x++) { map[27][x] = 1; map[28][x] = 1; }
+// Vertical paths connecting top to bottom
+for (let y = ZONES.discover.y + ZONES.discover.h; y < ZONES.build.y; y++) {
+  map[y][10] = 1; map[y][11] = 1;
+  map[y][27] = 1; map[y][28] = 1;
+  map[y][42] = 1; map[y][43] = 1;
+}
+
+// Punch doorways: wherever a path tile is adjacent to a zone border, open it
+for (let y = 1; y < ROWS-1; y++) {
+  for (let x = 1; x < COLS-1; x++) {
+    if (map[y][x] === 4) {
+      // Check if any neighbor is a path
+      if (map[y-1][x] === 1 || map[y+1][x] === 1 || map[y][x-1] === 1 || map[y][x+1] === 1) {
+        map[y][x] = 3; // convert border to floor (doorway)
+      }
+    }
+  }
+}
+// Also punch doorways where vertical paths meet zone borders (need 2-wide)
+// Extend: if a floor-doorway neighbor is also a border, open it too
+for (let y = 1; y < ROWS-1; y++) {
+  for (let x = 1; x < COLS-1; x++) {
+    if (map[y][x] === 4) {
+      if (map[y-1][x] === 3 || map[y+1][x] === 3 || map[y][x-1] === 3 || map[y][x+1] === 3) {
+        // Check if this border tile is next to a doorway AND close to a path
+        const nearPath = map[y-2]?.[x] === 1 || map[y+2]?.[x] === 1 ||
+                         map[y]?.[x-2] === 1 || map[y]?.[x+2] === 1 ||
+                         map[y-1]?.[x] === 1 || map[y+1]?.[x] === 1 ||
+                         map[y]?.[x-1] === 1 || map[y]?.[x+1] === 1;
+        if (nearPath) map[y][x] = 3;
+      }
+    }
+  }
+}
+
+// Water pond (away from paths)
+for (let dy = 0; dy < 3; dy++) {
+  for (let dx = 0; dx < 4; dx++) {
+    const px = 14 + dx, py = 17 + dy;
+    if (py < ROWS && px < COLS && map[py][px] === 0) map[py][px] = 2;
+  }
+}
+
+// Scatter flowers
+for (let y = 0; y < ROWS; y++)
+  for (let x = 0; x < COLS; x++)
+    if (map[y][x] === 0 && Math.random() < 0.04) map[y][x] = 5;
+
+// Trees along edges
+for (let x = 0; x < COLS; x++) { if (map[0][x] === 0) map[0][x] = 6; if (map[ROWS-1][x] === 0) map[ROWS-1][x] = 6; }
+for (let y = 0; y < ROWS; y++) { if (map[y][0] === 0) map[y][0] = 6; if (map[y][COLS-1] === 0) map[y][COLS-1] = 6; }
+
+// Collision: only water and trees block
+function isBlocked(tx, ty) {
+  if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return true;
+  const t = map[ty][tx];
+  return t === 2 || t === 6;
+}
+
+// ═══════════════════════════════════════════
+// TILE COLORS
+// ═══════════════════════════════════════════
+const GRASS1 = "#88c070", GRASS2 = "#78b060";
+const PATH1 = "#d8b068", PATH2 = "#c8a058";
+const WATER1 = "#5090d0", WATER2 = "#60a0e0";
+const FLOWER_COLORS = ["#ff6b6b","#ffd93d","#6bcb77","#4d96ff"];
+
+function getZoneAt(tx, ty) {
+  for (const [key, z] of Object.entries(ZONES))
+    if (tx >= z.x && tx < z.x+z.w && ty >= z.y && ty < z.y+z.h) return z;
+  return null;
+}
+function getZoneKeyAt(tx, ty) {
+  for (const [key, z] of Object.entries(ZONES))
+    if (tx >= z.x && tx < z.x+z.w && ty >= z.y && ty < z.y+z.h) return key;
+  return "";
+}
+
+// ═══════════════════════════════════════════
+// SPRITES
+// ═══════════════════════════════════════════
+function createCharSprite(mainColor, darkColor, skinColor) {
+  const _ = null, M = mainColor, D = darkColor, S = skinColor || "#ffd5b0", H = darkColor, E = "#1a1a2e", W = "#ffffff";
+  return [
+    [_,_,_,_,_,H,H,H,H,H,H,_,_,_,_,_],
+    [_,_,_,_,H,H,H,H,H,H,H,H,_,_,_,_],
+    [_,_,_,H,H,H,H,H,H,H,H,H,H,_,_,_],
+    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
+    [_,_,_,M,M,M,M,M,M,M,M,M,_,_,_,_],
+    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
+    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
+    [_,_,M,D,M,M,M,M,M,M,M,D,M,_,_,_],
+    [_,_,_,D,M,M,M,M,M,M,M,D,_,_,_,_],
+    [_,_,_,_,D,D,D,_,D,D,D,_,_,_,_,_],
+    [_,_,_,_,D,D,D,_,D,D,D,_,_,_,_,_],
+    [_,_,_,D,D,D,D,_,D,D,D,D,_,_,_,_],
+  ];
+}
+function createCharSpriteWalk(mainColor, darkColor, skinColor) {
+  const _ = null, M = mainColor, D = darkColor, S = skinColor || "#ffd5b0", H = darkColor, E = "#1a1a2e", W = "#ffffff";
+  return [
+    [_,_,_,_,_,H,H,H,H,H,H,_,_,_,_,_],
+    [_,_,_,_,H,H,H,H,H,H,H,H,_,_,_,_],
+    [_,_,_,H,H,H,H,H,H,H,H,H,H,_,_,_],
+    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
+    [_,_,_,M,M,M,M,M,M,M,M,M,_,_,_,_],
+    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
+    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
+    [_,_,M,D,M,M,M,M,M,M,M,D,M,_,_,_],
+    [_,_,_,D,M,M,M,M,M,M,M,D,_,_,_,_],
+    [_,_,_,D,D,D,_,_,_,D,D,D,_,_,_,_],
+    [_,_,D,D,D,_,_,_,_,_,D,D,D,_,_,_],
+    [_,_,D,D,D,_,_,_,_,_,D,D,D,_,_,_],
+  ];
+}
+const CEO_SPRITE_1 = (() => {
+  const _ = null, R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
+        S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
+  return [
+    [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
+    [_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],
+    [_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
+    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
+    [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
+    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
+    [_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
+    [_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],
+    [_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],
+    [_,_,_,_,Bd,Bd,Bd,_,Bd,Bd,Bd,_,_,_,_,_],
+    [_,_,_,Bd,Bd,Bd,Bd,_,Bd,Bd,Bd,Bd,_,_,_,_],
+  ];
+})();
+const CEO_SPRITE_2 = (() => {
+  const _ = null, R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
+        S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
+  return [
+    [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
+    [_,_,_,R,R,R,R,R,R,R,R,R,R,_,_,_],
+    [_,_,_,R,Rd,Rd,W,R,R,Rd,Rd,R,_,_,_,_],
+    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
+    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
+    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
+    [_,_,_,B,B,B,B,B,B,B,B,B,_,_,_,_],
+    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
+    [_,_,B,B,B,B,B,B,B,B,B,B,B,_,_,_],
+    [_,_,B,S,B,B,B,B,B,B,B,S,B,_,_,_],
+    [_,_,_,S,B,B,B,B,B,B,B,S,_,_,_,_],
+    [_,_,_,Bd,Bd,Bd,_,_,_,Bd,Bd,Bd,_,_,_,_],
+    [_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_],
+    [_,_,Bd,Bd,Bd,_,_,_,_,_,Bd,Bd,Bd,_,_,_],
+  ];
+})();
+
+function spriteToCanvas(spriteData) {
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  const cx = c.getContext('2d');
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++)
+      if (spriteData[y] && spriteData[y][x]) { cx.fillStyle = spriteData[y][x]; cx.fillRect(x, y, 1, 1); }
+  return c;
+}
+
+const agentSprites = AGENTS.map(a => ({
+  frame1: spriteToCanvas(createCharSprite(a.color, a.darkColor, "#ffd5b0")),
+  frame2: spriteToCanvas(createCharSpriteWalk(a.color, a.darkColor, "#ffd5b0")),
+}));
+const ceoSprites = {
+  frame1: spriteToCanvas(CEO_SPRITE_1),
+  frame2: spriteToCanvas(CEO_SPRITE_2),
+};
+
+// ═══════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════
+const player = {
+  x: 27, y: 15, px: 27*TILE, py: 15*TILE,
+  moving: false, dir: "down", frame: 0, moveTimer: 0,
+  targetX: 27, targetY: 15,
+};
+
+const agents = AGENTS.map((a, i) => {
+  const z = ZONES[a.zone];
+  const homeX = z.x + 3 + Math.floor(Math.random() * (z.w - 6));
+  const homeY = z.y + 3 + Math.floor(Math.random() * (z.h - 6));
+  const tasks = AGENT_TASKS[a.name] || [];
+  const activeTask = tasks.find(t => t.status === "running") || tasks.find(t => t.status === "thinking") || null;
+  return {
+    ...a, index: i,
+    x: homeX, y: homeY, px: homeX*TILE, py: homeY*TILE,
+    homeX, homeY,
+    moving: false, dir: "down", frame: 0, moveTimer: 0,
+    targetX: homeX, targetY: homeY,
+    wanderTimer: 60 + Math.random() * 120, wanderRadius: 3,
+    tasks, activeTask,
+    thoughtBubbleTimer: 0,
+    // Simulated progress ticking
+    progressTick: Math.random() * 200,
+  };
+});
+
+const camera = { x: 0, y: 0 };
+const keys = {};
+
+// Dialog state
+const dialog = {
+  active: false, text: "", displayedChars: 0, charTimer: 0,
+  agentIndex: -1, phase: "typing", selectedOption: 0,
+};
+
+let currentZoneName = "", zoneNameTimer = 0, lastZoneKey = "";
+let activePhase = "discover";
+let gameTime = 0;
+
+// ═══════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (dialog.active) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); handleDialogInput(); }
+    if (e.key === 'Escape') closeDialog();
+    if (dialog.phase === "question") {
+      if (e.key === 'ArrowUp' || e.key === 'w') dialog.selectedOption = 0;
+      if (e.key === 'ArrowDown' || e.key === 's') dialog.selectedOption = 1;
+    }
+    return;
+  }
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tryInteract(); }
+  if (e.key === 'Escape') closeDetailPanel();
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+function handleDialogInput() {
+  if (dialog.phase === "typing") {
+    dialog.displayedChars = dialog.text.length;
+    dialog.phase = "done";
+  } else if (dialog.phase === "done") {
+    dialog.phase = "question";
+    dialog.selectedOption = 0;
+  } else if (dialog.phase === "question") {
+    if (dialog.selectedOption === 0) { openDetailPanel(dialog.agentIndex); closeDialog(); }
+    else closeDialog();
+  }
+}
+function closeDialog() { dialog.active = false; dialog.phase = "typing"; }
+
+// ═══════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════
+function getFacingTile() {
+  let fx = player.x, fy = player.y;
+  if (player.dir === "up") fy--; if (player.dir === "down") fy++;
+  if (player.dir === "left") fx--; if (player.dir === "right") fx++;
+  return { x: fx, y: fy };
+}
+function getAdjacentAgent() {
+  const facing = getFacingTile();
+  for (let i = 0; i < agents.length; i++)
+    if (agents[i].x === facing.x && agents[i].y === facing.y) return i;
+  for (let i = 0; i < agents.length; i++) {
+    const dx = Math.abs(agents[i].x - player.x), dy = Math.abs(agents[i].y - player.y);
+    if (dx <= 1 && dy <= 1 && (dx+dy) <= 2) return i;
+  }
+  return -1;
+}
+
+function tryInteract() {
+  const idx = getAdjacentAgent();
+  if (idx === -1) return;
+  const a = agents[idx];
+  // Show current task in greeting
+  const taskStr = a.activeTask
+    ? `I'm working on: "${a.activeTask.name}" (${a.activeTask.status}). ${a.activeTask.detail}`
+    : `I'm idle right now. My skills: ${a.skills.map(s=>"/"+s).join(", ")}`;
+  dialog.active = true;
+  dialog.text = `${a.name}: ${taskStr}`;
+  dialog.displayedChars = 0; dialog.charTimer = 0;
+  dialog.agentIndex = idx; dialog.phase = "typing"; dialog.selectedOption = 0;
+}
+
+// ═══════════════════════════════════════════
+// DETAIL PANEL (Task-focused)
+// ═══════════════════════════════════════════
+function openDetailPanel(agentIdx) {
+  const a = agents[agentIdx];
+  const badge = document.getElementById('dp-badge');
+  badge.textContent = a.model.toUpperCase();
+  badge.style.background = a.color + "25";
+  badge.style.color = a.color;
+  document.getElementById('dp-title').textContent = a.name;
+
+  let html = '';
+
+  // Agent info section
+  html += '<div class="dp-section">';
+  html += '<div class="dp-section-title">Agent Info</div>';
+  html += `<div class="dp-info-row"><span class="dp-info-label">Role</span><span class="dp-info-value">${a.desc}</span></div>`;
+  html += `<div class="dp-info-row"><span class="dp-info-label">Zone</span><span class="dp-info-value">${ZONE_NAMES[a.zone]}</span></div>`;
+  html += '<div style="margin-top:6px">';
+  a.skills.forEach(s => { html += `<span class="dp-tag dp-tag-skill">/${s}</span>`; });
+  a.mcps.forEach(m => { html += `<span class="dp-tag dp-tag-mcp">${m}</span>`; });
+  html += '</div>';
+  const myTeams = TEAMS.filter(t => t.members.includes(a.name));
+  if (myTeams.length) {
+    html += '<div style="margin-top:6px">';
+    myTeams.forEach(t => { html += `<span class="dp-tag dp-tag-team">${t.name}</span>`; });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // TASKS section
+  html += '<div class="dp-section">';
+  html += '<div class="dp-section-title">Current Tasks</div>';
+  if (a.tasks.length === 0) {
+    html += '<div style="color:#475569;padding:8px 0">No active tasks</div>';
+  } else {
+    a.tasks.forEach(t => {
+      const statusIcons = { running: "⟳", thinking: "◆", done: "✓", queued: "○" };
+      const barColors = { running: "#fbbf24", thinking: "#8b5cf6", done: "#22c55e", queued: "#475569" };
+      html += `<div class="task-item ${t.status}">`;
+      html += `<div class="task-status ${t.status}">${statusIcons[t.status]} ${t.status}</div>`;
+      html += `<div class="task-name">${t.name}</div>`;
+      html += `<div class="task-detail">${t.detail}</div>`;
+      if (t.status !== "done" && t.status !== "queued") {
+        html += `<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${barColors[t.status]}"></div></div>`;
+      }
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  document.getElementById('dp-body').innerHTML = html;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-scrim').classList.add('open');
+}
+
+function closeDetailPanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('detail-scrim').classList.remove('open');
+}
+document.getElementById('dp-close').addEventListener('click', closeDetailPanel);
+document.getElementById('detail-scrim').addEventListener('click', closeDetailPanel);
+
+// ═══════════════════════════════════════════
+// MOVEMENT
+// ═══════════════════════════════════════════
+const MOVE_SPEED = 2;
+
+function updatePlayer() {
+  if (dialog.active) return;
+  if (player.moving) {
+    const tx = player.targetX*TILE, ty = player.targetY*TILE;
+    const dx = tx - player.px, dy = ty - player.py;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < MOVE_SPEED) {
+      player.px = tx; player.py = ty;
+      player.x = player.targetX; player.y = player.targetY;
+      player.moving = false; player.frame = 0;
+    } else {
+      player.px += (dx/dist)*MOVE_SPEED; player.py += (dy/dist)*MOVE_SPEED;
+      player.moveTimer++; player.frame = Math.floor(player.moveTimer/8)%2;
+    }
+    return;
+  }
+  let dx = 0, dy = 0, dir = player.dir;
+  if (keys['ArrowUp']||keys['w']||keys['W']) { dy=-1; dir="up"; }
+  else if (keys['ArrowDown']||keys['s']||keys['S']) { dy=1; dir="down"; }
+  else if (keys['ArrowLeft']||keys['a']||keys['A']) { dx=-1; dir="left"; }
+  else if (keys['ArrowRight']||keys['d']||keys['D']) { dx=1; dir="right"; }
+  player.dir = dir;
+  if (dx !== 0 || dy !== 0) {
+    const nx = player.x+dx, ny = player.y+dy;
+    if (!isBlocked(nx, ny) && !agents.some(a => a.x === nx && a.y === ny)) {
+      player.targetX = nx; player.targetY = ny;
+      player.moving = true; player.moveTimer = 0;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// AGENT AI
+// ═══════════════════════════════════════════
+function updateAgents() {
+  for (const a of agents) {
+    // Tick simulated progress
+    a.progressTick++;
+    if (a.progressTick > 60) {
+      a.progressTick = 0;
+      a.tasks.forEach(t => {
+        if (t.status === "running" && t.progress < 95) t.progress += Math.random() * 3;
+        if (t.status === "thinking" && t.progress < 80) t.progress += Math.random() * 2;
+      });
+    }
+
+    if (a.moving) {
+      const tx = a.targetX*TILE, ty = a.targetY*TILE;
+      const dx = tx - a.px, dy = ty - a.py;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 1.5) {
+        a.px = tx; a.py = ty; a.x = a.targetX; a.y = a.targetY;
+        a.moving = false; a.frame = 0;
+        a.wanderTimer = 90 + Math.random()*150;
+      } else {
+        a.px += (dx/dist)*1.2; a.py += (dy/dist)*1.2;
+        a.moveTimer++; a.frame = Math.floor(a.moveTimer/10)%2;
+      }
+    } else {
+      a.wanderTimer--;
+      if (a.wanderTimer <= 0) {
+        const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+        const d = dirs[Math.floor(Math.random()*4)];
+        const nx = a.x+d[0], ny = a.y+d[1];
+        const dfh = Math.abs(nx-a.homeX) + Math.abs(ny-a.homeY);
+        if (!isBlocked(nx,ny) && dfh <= a.wanderRadius &&
+            !(nx===player.x && ny===player.y) &&
+            !agents.some(o => o!==a && o.x===nx && o.y===ny)) {
+          a.targetX = nx; a.targetY = ny; a.moving = true; a.moveTimer = 0;
+          if (d[0]<0) a.dir="left"; else if (d[0]>0) a.dir="right";
+          else if (d[1]<0) a.dir="up"; else a.dir="down";
+        } else {
+          a.wanderTimer = 30 + Math.random()*60;
+          a.dir = ["up","down","left","right"][Math.floor(Math.random()*4)];
+        }
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// CAMERA
+// ═══════════════════════════════════════════
+function updateCamera() {
+  const tx = player.px*SCALE - canvas.width/2 + TS/2;
+  const ty = player.py*SCALE - canvas.height/2 + TS/2;
+  camera.x += (tx - camera.x) * 0.1;
+  camera.y += (ty - camera.y) * 0.1;
+  const maxX = WORLD_W*SCALE - canvas.width;
+  const maxY = WORLD_H*SCALE - canvas.height;
+  camera.x = Math.max(0, Math.min(maxX, camera.x));
+  camera.y = Math.max(0, Math.min(maxY, camera.y));
+}
+
+function updateZoneDetection() {
+  let found = "";
+  for (const [key, z] of Object.entries(ZONES))
+    if (player.x >= z.x && player.x < z.x+z.w && player.y >= z.y && player.y < z.y+z.h) { found = key; break; }
+  if (found && found !== lastZoneKey) {
+    currentZoneName = ZONE_NAMES[found] || found;
+    zoneNameTimer = 120; activePhase = found;
+  }
+  lastZoneKey = found;
+  if (zoneNameTimer > 0) zoneNameTimer--;
+}
+
+// ═══════════════════════════════════════════
+// DRAWING
+// ═══════════════════════════════════════════
+function drawTile(x, y) {
+  const sx = x*TS - camera.x, sy = y*TS - camera.y;
+  if (sx+TS < 0 || sy+TS < 0 || sx > canvas.width || sy > canvas.height) return;
+  const t = map[y][x];
+
+  if (t === 0) {
+    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
+    ctx.fillRect(sx, sy, TS, TS);
+  } else if (t === 1) {
+    ctx.fillStyle = (x+y)%2===0 ? PATH1 : PATH2;
+    ctx.fillRect(sx, sy, TS, TS);
+  } else if (t === 2) {
+    const wave = Math.sin(gameTime*0.03 + x*0.5 + y*0.3)*0.5+0.5;
+    ctx.fillStyle = wave > 0.5 ? WATER1 : WATER2;
+    ctx.fillRect(sx, sy, TS, TS);
+    if (Math.sin(gameTime*0.05 + x*2 + y*3) > 0.9) {
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fillRect(sx+TS/3, sy+TS/4, TS/5, TS/5);
+    }
+  } else if (t === 3) {
+    const z = getZoneAt(x, y);
+    if (z) {
+      ctx.fillStyle = z === ZONES[activePhase] ? z.color+"25" : z.color+"12";
+      ctx.fillRect(sx, sy, TS, TS);
+      ctx.strokeStyle = z.color+"15"; ctx.strokeRect(sx, sy, TS, TS);
+    } else {
+      ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
+      ctx.fillRect(sx, sy, TS, TS);
+    }
+  } else if (t === 4) {
+    const z = getZoneAt(x, y);
+    if (z) {
+      const isActive = z === ZONES[activePhase];
+      ctx.fillStyle = isActive ? z.color+"50" : z.color+"25";
+      ctx.fillRect(sx, sy, TS, TS);
+      // Inner border pattern
+      ctx.fillStyle = isActive ? z.color+"70" : z.color+"40";
+      ctx.fillRect(sx+2, sy+2, TS-4, TS-4);
+    }
+  } else if (t === 5) {
+    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
+    ctx.fillRect(sx, sy, TS, TS);
+    const fc = FLOWER_COLORS[(x*7+y*13)%FLOWER_COLORS.length];
+    const bob = Math.sin(gameTime*0.02+x+y)*2;
+    ctx.fillStyle = fc; ctx.fillRect(sx+TS/2-4, sy+TS/3+bob, 8, 8);
+    ctx.fillStyle = "#4a7c3f"; ctx.fillRect(sx+TS/2-1, sy+TS/3+8+bob, 3, 10);
+  } else if (t === 6) {
+    ctx.fillStyle = (x+y)%2===0 ? GRASS1 : GRASS2;
+    ctx.fillRect(sx, sy, TS, TS);
+    ctx.fillStyle = "#6b4226"; ctx.fillRect(sx+TS/2-4, sy+TS/2, 8, TS/2);
+    ctx.fillStyle = "#2d6a1e"; ctx.fillRect(sx+4, sy+2, TS-8, TS/2);
+    ctx.fillStyle = "#3a8c2a"; ctx.fillRect(sx+8, sy-2, TS-16, TS/3);
+  }
+}
+
+function drawSprite(spriteCanvas, px, py) {
+  const sx = px*SCALE - camera.x, sy = py*SCALE - camera.y;
+  ctx.drawImage(spriteCanvas, sx, sy, TS, TS);
+}
+
+function drawZoneLabels() {
+  ctx.font = "bold 14px monospace"; ctx.textAlign = "center";
+  for (const [key, z] of Object.entries(ZONES)) {
+    const sx = (z.x + z.w/2)*TS - camera.x;
+    const sy = z.y*TS - camera.y - 8;
+    if (sx < -200 || sx > canvas.width+200 || sy < -50 || sy > canvas.height+50) continue;
+    const isActive = key === activePhase;
+    ctx.fillStyle = isActive ? z.color : z.color+"80";
+    ctx.fillText(ZONE_NAMES[key].toUpperCase(), sx, sy);
+    if (isActive) {
+      ctx.fillStyle = z.color+"40";
+      ctx.fillRect(sx-40, sy+4, 80, 3);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// THOUGHT BUBBLES (above agents)
+// ═══════════════════════════════════════════
+function drawThoughtBubbles() {
+  for (const a of agents) {
+    if (!a.activeTask) continue;
+    const sx = a.px*SCALE - camera.x + TS/2;
+    const sy = a.py*SCALE - camera.y - 8;
+
+    // Skip if off screen
+    if (sx < -100 || sx > canvas.width+100 || sy < -50 || sy > canvas.height+50) continue;
+
+    const isThinking = a.activeTask.status === "thinking";
+    const isRunning = a.activeTask.status === "running";
+    const bubbleColor = isThinking ? "#8b5cf6" : "#fbbf24";
+    const bgColor = isThinking ? "rgba(139,92,246,0.15)" : "rgba(251,191,36,0.15)";
+
+    // Floating animation
+    const floatY = Math.sin(gameTime * 0.04 + a.index * 2) * 3;
+
+    // Small dots leading up
+    ctx.fillStyle = bubbleColor + "60";
+    ctx.beginPath(); ctx.arc(sx - 2, sy + floatY + 4, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx - 6, sy + floatY - 2, 3, 0, Math.PI*2); ctx.fill();
+
+    // Main bubble
+    const bw = 120, bh = 20;
+    const bx = sx - bw/2, by = sy - bh - 6 + floatY;
+
+    // Background
+    ctx.fillStyle = "rgba(10,15,30,0.88)";
+    ctx.beginPath();
+    ctx.roundRect(bx, by, bw, bh, 4);
+    ctx.fill();
+    ctx.strokeStyle = bubbleColor + "60";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Status icon (animated dots for thinking, spinner for running)
+    ctx.fillStyle = bubbleColor;
+    ctx.font = "bold 8px monospace"; ctx.textAlign = "left";
+    if (isThinking) {
+      const dots = ".".repeat(1 + Math.floor(gameTime/20)%3);
+      ctx.fillText("◆" + dots, bx+4, by+13);
+    } else {
+      const spinChars = ["⟳","◐","◑","◒"];
+      ctx.fillText(spinChars[Math.floor(gameTime/15)%4], bx+4, by+13);
+    }
+
+    // Task name (truncated)
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "8px monospace";
+    let taskName = a.activeTask.name;
+    if (taskName.length > 14) taskName = taskName.substring(0, 13) + "…";
+    ctx.fillText(taskName, bx+16, by+13);
+  }
+}
+
+function drawInteractionPrompt() {
+  if (dialog.active) return;
+  const idx = getAdjacentAgent();
+  if (idx === -1) return;
+  const a = agents[idx];
+  const sx = a.px*SCALE - camera.x + TS/2;
+  const sy = a.py*SCALE - camera.y - 30;
+
+  // Pulsing prompt
+  const pulse = 0.7 + Math.sin(gameTime*0.08)*0.3;
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  const bw = 62, bh = 22;
+  ctx.beginPath(); ctx.roundRect(sx-bw/2, sy-bh, bw, bh, 4); ctx.fill();
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
+  ctx.fillText("[SPACE]", sx, sy-6);
+  ctx.globalAlpha = 1;
+}
+
+function drawDialog() {
+  if (!dialog.active) return;
+  const boxH = 130, boxY = canvas.height - boxH - 16, boxX = 30, boxW = canvas.width - 60;
+
+  ctx.fillStyle = "rgba(10,15,30,0.94)";
+  ctx.beginPath(); ctx.roundRect(boxX, boxY, boxW, boxH, 8); ctx.fill();
+  const a = agents[dialog.agentIndex];
+  ctx.strokeStyle = a ? a.color+"80" : "#60a5fa";
+  ctx.lineWidth = 2; ctx.stroke();
+
+  if (dialog.agentIndex >= 0) {
+    const ag = agents[dialog.agentIndex];
+    const ps = 56, px = boxX+14, py = boxY + (boxH-ps)/2;
+    ctx.fillStyle = "#0f172a"; ctx.fillRect(px, py, ps, ps);
+    ctx.drawImage(agentSprites[dialog.agentIndex].frame1, px+4, py+4, 48, 48);
+    ctx.strokeStyle = ag.color+"80"; ctx.lineWidth = 1; ctx.strokeRect(px, py, ps, ps);
+    // Status indicator
+    const statusColor = ag.activeTask ? (ag.activeTask.status === "running" ? "#fbbf24" : "#8b5cf6") : "#22c55e";
+    ctx.fillStyle = statusColor;
+    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = statusColor;
+    ctx.beginPath(); ctx.arc(px+ps-4, py+4, 2, 0, Math.PI*2); ctx.fill();
+  }
+
+  const textX = boxX + 84, textY = boxY + 28, maxWidth = boxW - 100;
+
+  if (dialog.phase === "typing") {
+    dialog.charTimer++;
+    if (dialog.charTimer >= 1) {
+      dialog.charTimer = 0;
+      dialog.displayedChars = Math.min(dialog.displayedChars+1, dialog.text.length);
+      if (dialog.displayedChars >= dialog.text.length) dialog.phase = "done";
+    }
+  }
+
+  ctx.fillStyle = "#e2e8f0"; ctx.font = "12px monospace"; ctx.textAlign = "left";
+  const words = dialog.text.substring(0, dialog.displayedChars).split(' ');
+  let line = '', lineY = textY;
+  for (const word of words) {
+    const test = line + word + ' ';
+    if (ctx.measureText(test).width > maxWidth && line.length > 0) {
+      ctx.fillText(line, textX, lineY); line = word + ' '; lineY += 16;
+    } else line = test;
+  }
+  ctx.fillText(line, textX, lineY);
+
+  if (dialog.phase === "done") {
+    ctx.fillStyle = "#64748b"; ctx.font = "10px monospace";
+    ctx.fillText("▼ SPACE", textX, boxY+boxH-12);
+  }
+  if (dialog.phase === "question") {
+    ctx.fillStyle = "#e2e8f0"; ctx.font = "12px monospace";
+    ctx.fillText("View full task list?", textX, boxY+28);
+    const opts = ["Yes, show details", "No thanks"];
+    for (let i = 0; i < opts.length; i++) {
+      const sel = dialog.selectedOption === i;
+      ctx.fillStyle = sel ? "#fbbf24" : "#64748b";
+      ctx.font = (sel?"bold ":"")+"12px monospace";
+      ctx.fillText((sel?"> ":"  ")+opts[i], textX+8, boxY+50+i*20);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// HUD
+// ═══════════════════════════════════════════
+function drawMinimap() {
+  const mmW=130, mmH=100, mmX=canvas.width-mmW-12, mmY=12;
+  const sx=mmW/COLS, sy=mmH/ROWS;
+  ctx.fillStyle="rgba(10,15,30,0.88)";
+  ctx.beginPath(); ctx.roundRect(mmX-4, mmY-4, mmW+8, mmH+8, 6); ctx.fill();
+  ctx.strokeStyle="#1e293b"; ctx.lineWidth=1; ctx.stroke();
+  for (const [key,z] of Object.entries(ZONES)) {
+    ctx.fillStyle = z.color+(key===activePhase?"50":"25");
+    ctx.fillRect(mmX+z.x*sx, mmY+z.y*sy, z.w*sx, z.h*sy);
+  }
+  for (const a of agents) { ctx.fillStyle=a.color; ctx.fillRect(mmX+a.x*sx-1, mmY+a.y*sy-1, 3, 3); }
+  ctx.fillStyle="#fbbf24"; ctx.fillRect(mmX+player.x*sx-2, mmY+player.y*sy-2, 4, 4);
+  ctx.fillStyle="#475569"; ctx.font="8px monospace"; ctx.textAlign="right";
+  ctx.fillText("MAP", mmX+mmW, mmY-6);
+}
+
+function drawAgentRoster() {
+  const rX=12; let rY=12;
+  const rH = agents.length*28+22;
+  ctx.fillStyle="rgba(10,15,30,0.88)";
+  ctx.beginPath(); ctx.roundRect(rX-2, rY-2, 170, rH+4, 6); ctx.fill();
+  ctx.strokeStyle="#1e293b"; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle="#475569"; ctx.font="8px monospace"; ctx.textAlign="left";
+  ctx.fillText("TEAM", rX+8, rY+10);
+  rY += 18;
+  for (const a of agents) {
+    // Color bar
+    ctx.fillStyle = a.color+"30";
+    ctx.fillRect(rX+2, rY-2, 164, 24);
+    // Color dot with status
+    const statusColor = a.activeTask ? (a.activeTask.status === "running" ? "#fbbf24" : "#8b5cf6") : "#22c55e";
+    ctx.fillStyle = a.color;
+    ctx.beginPath(); ctx.arc(rX+14, rY+8, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = statusColor;
+    ctx.beginPath(); ctx.arc(rX+14, rY+8, 2.5, 0, Math.PI*2); ctx.fill();
+    // Name
+    ctx.fillStyle="#cbd5e1"; ctx.font="10px monospace";
+    ctx.fillText(a.name, rX+24, rY+8);
+    // Task hint
+    if (a.activeTask) {
+      ctx.fillStyle = statusColor;
+      ctx.font = "7px monospace";
+      let hint = a.activeTask.name;
+      if (hint.length > 20) hint = hint.substring(0, 19) + "…";
+      ctx.fillText(hint, rX+24, rY+18);
+    } else {
+      ctx.fillStyle = "#334155"; ctx.font="7px monospace";
+      ctx.fillText("idle", rX+24, rY+18);
+    }
+    rY += 28;
+  }
+}
+
+function drawZonePopup() {
+  if (zoneNameTimer <= 0) return;
+  const alpha = Math.min(1, zoneNameTimer/30);
+  ctx.globalAlpha = alpha;
+  const px = canvas.width/2, py = 55;
+  ctx.font = "bold 18px monospace"; ctx.textAlign = "center";
+  const mw = ctx.measureText(currentZoneName).width;
+  ctx.fillStyle="rgba(10,15,30,0.85)";
+  ctx.beginPath(); ctx.roundRect(px-mw/2-16, py-16, mw+32, 34, 6); ctx.fill();
+  ctx.fillStyle = ZONES[activePhase] ? ZONES[activePhase].color : "#fff";
+  ctx.fillText(currentZoneName, px, py+6);
+  ctx.globalAlpha = 1;
+}
+
+function drawControlsHint() {
+  ctx.fillStyle="rgba(10,15,30,0.75)";
+  const hintW = 420;
+  ctx.beginPath(); ctx.roundRect(10, canvas.height-32, hintW, 22, 4); ctx.fill();
+  ctx.fillStyle="#475569"; ctx.font="10px monospace"; ctx.textAlign="left";
+  ctx.fillText("WASD/Arrows: Move  |  SPACE: Talk  |  ESC: Close", 18, canvas.height-17);
+}
+
+// ═══════════════════════════════════════════
+// GAME LOOP
+// ═══════════════════════════════════════════
+function update() {
+  gameTime++;
+  updatePlayer();
+  updateAgents();
+  updateCamera();
+  updateZoneDetection();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0f172a"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const startCol = Math.max(0, Math.floor(camera.x/TS));
+  const endCol = Math.min(COLS, Math.ceil((camera.x+canvas.width)/TS)+1);
+  const startRow = Math.max(0, Math.floor(camera.y/TS));
+  const endRow = Math.min(ROWS, Math.ceil((camera.y+canvas.height)/TS)+1);
+  for (let y=startRow; y<endRow; y++) for (let x=startCol; x<endCol; x++) drawTile(x, y);
+
+  drawZoneLabels();
+
+  // Depth-sorted characters
+  const chars = [{ type:"player", py:player.py, px:player.px, frame:player.frame }];
+  for (let i=0; i<agents.length; i++) chars.push({ type:"agent", index:i, py:agents[i].py, px:agents[i].px, frame:agents[i].frame });
+  chars.sort((a,b) => a.py - b.py);
+  for (const c of chars) {
+    if (c.type==="player") drawSprite(c.frame===0 ? ceoSprites.frame1 : ceoSprites.frame2, c.px, c.py);
+    else drawSprite(c.frame===0 ? agentSprites[c.index].frame1 : agentSprites[c.index].frame2, c.px, c.py);
+  }
+
+  drawThoughtBubbles();
+  drawInteractionPrompt();
+  drawMinimap();
+  drawAgentRoster();
+  drawZonePopup();
+  drawControlsHint();
+  drawDialog();
+}
+
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+camera.x = player.px*SCALE - canvas.width/2;
+camera.y = player.py*SCALE - canvas.height/2;
+gameLoop();
+</script>
+</body>
+</html>
