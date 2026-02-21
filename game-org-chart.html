@@ -103,6 +103,67 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase;
 }
 
+/* ═══ Title Card ═══ */
+#title-card {
+  position: fixed; inset: 0; background: #0a0f1e;
+  z-index: 400; display: none; align-items: center; justify-content: center;
+  font-family: monospace; transition: all 0.4s ease;
+}
+#title-card.show { display: flex; }
+#title-card.as-header {
+  inset: unset; top: 0; left: 0; right: 0; height: 44px;
+  background: rgba(10,15,30,0.95); border-bottom: 1px solid #1e293b;
+  align-items: center; justify-content: flex-start;
+  padding: 0 16px; display: flex;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+#title-card-inner { text-align: center; padding: 40px; max-width: 600px; transition: all 0.4s ease; }
+#title-card.as-header #title-card-inner {
+  display: flex; align-items: center; gap: 16px; padding: 0; text-align: left;
+}
+#title-card-loading {
+  color: #334155; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;
+}
+#title-card-content { display: none; }
+#title-card-content.show { display: block; }
+#title-card.as-header #title-card-content { display: flex; align-items: center; gap: 14px; }
+.tc-label {
+  font-size: 0.6rem; letter-spacing: 4px; text-transform: uppercase;
+  color: #22c55e; margin-bottom: 24px;
+}
+#title-card.as-header .tc-label { display: none; }
+#tc-title {
+  font-size: clamp(2.4rem, 7vw, 4rem); font-weight: bold; letter-spacing: 4px;
+  text-transform: uppercase; color: #f1f5f9;
+  text-shadow: 0 0 40px rgba(34,197,94,0.4), 0 0 80px rgba(34,197,94,0.15);
+  margin-bottom: 16px; line-height: 1.1; transition: all 0.4s ease;
+}
+#title-card.as-header #tc-title {
+  font-size: 0.95rem; letter-spacing: 3px; margin-bottom: 0;
+  text-shadow: none; color: #22c55e;
+}
+#tc-tagline {
+  font-size: 0.9rem; color: #64748b; letter-spacing: 2px; margin-bottom: 40px;
+  transition: all 0.4s ease;
+}
+#title-card.as-header #tc-tagline {
+  font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 0; color: #334155;
+  border-left: 1px solid #1e293b; padding-left: 14px;
+}
+#tc-begin {
+  font-family: monospace; font-size: 0.8rem; font-weight: bold;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 12px 36px; border: 2px solid #22c55e; background: transparent;
+  color: #22c55e; cursor: pointer; transition: all 0.15s;
+}
+#tc-begin:hover { background: #22c55e; color: #052e16; }
+#title-card.as-header #tc-begin { display: none; }
+.tc-scanline {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+}
+#title-card.as-header .tc-scanline { display: none; }
+
 /* ═══ Scroll Overlay ═══ */
 #scroll-scrim { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; }
 #scroll-scrim.open { display:flex; align-items:center; justify-content:center; }
@@ -187,6 +248,20 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
         <div class="ob-agent-chip" style="color:#ec4899">&#9632; Designer</div>
         <div class="ob-agent-chip" style="color:#3b82f6">&#9632; Engineer</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Title card -->
+<div id="title-card">
+  <div class="tc-scanline"></div>
+  <div id="title-card-inner">
+    <div id="title-card-loading">&#9632; Naming your product<span id="tc-dots"></span></div>
+    <div id="title-card-content">
+      <div class="tc-label">&#9632; Your product</div>
+      <div id="tc-title"></div>
+      <div id="tc-tagline"></div>
+      <button id="tc-begin">Enter the hub &#9654;</button>
     </div>
   </div>
 </div>
@@ -283,6 +358,22 @@ async function fetchAgentFindings(agentName) {
   } catch(e) {
     console.warn("API call failed for", agentName, "— using demo data:", e.message);
     AGENT_FINDINGS[agentName] = DEMO_FINDINGS[agentName];
+  }
+}
+
+// Fetch a live status quip for the agent (fast, Haiku model)
+const AGENT_STATUS = {};
+async function fetchAgentStatus(agentName) {
+  try {
+    const resp = await fetch("/api/agent", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ agent: agentName, context: productContext || undefined, type: "status" }),
+    });
+    if (!resp.ok) throw new Error("API " + resp.status);
+    const data = await resp.json();
+    AGENT_STATUS[agentName] = data.message;
+  } catch(e) {
+    console.warn("Status fetch failed for", agentName, ":", e.message);
   }
 }
 
@@ -674,8 +765,8 @@ function tryInteract(){
     dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
     return;
   }
-  const taskStr=a.activeTask?`I'm working on: "${a.activeTask.name}" (${a.activeTask.status}). ${a.activeTask.detail}`:`Idle. Skills: ${a.skills.map(s=>"/"+s).join(", ")}`;
-  dialog.active=true;dialog.text=`${a.name}: ${taskStr}`;
+  const liveStatus=AGENT_STATUS[a.name];
+  dialog.active=true;dialog.text=liveStatus||"Crunching, getting information...";
   dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
 }
 
@@ -834,8 +925,9 @@ function updateAgents(){
       // Move toward workstation
       if(!a.moving){
         if(a.x===a.workX&&a.y===a.workY){a.state="working";a.wanderTimer=60+Math.random()*120;
-          // Fire real API call
+          // Fire real API calls
           if(!AGENT_FINDINGS[a.name]) fetchAgentFindings(a.name);
+          if(!AGENT_STATUS[a.name]) fetchAgentStatus(a.name);
         }
         else{
           // Simple pathfinding: move one step closer
@@ -1124,18 +1216,50 @@ function draw(){
 function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
 camera.x=player.px*SCALE-canvas.width/2;camera.y=player.py*SCALE-canvas.height/2;
 
-// Onboarding
+// Onboarding → Title Card → Game
+const titleCard=document.getElementById('title-card');
+const titleCardContent=document.getElementById('title-card-content');
+const titleCardLoading=document.getElementById('title-card-loading');
+let tcDotsTimer=null;
+
 function startGame(){
   onboardingOpen=false;
-  document.getElementById('onboarding-overlay').style.display='none';
+  titleCard.classList.remove('show');
+  titleCard.classList.add('as-header');
   gameLoop();
+}
+
+document.getElementById('tc-begin').addEventListener('click',startGame);
+
+async function showTitleCard(context){
+  document.getElementById('onboarding-overlay').style.display='none';
+  titleCard.classList.add('show');
+
+  // Animate loading dots
+  let dots=0;
+  tcDotsTimer=setInterval(()=>{dots=(dots+1)%4;document.getElementById('tc-dots').textContent='.'.repeat(dots);},400);
+
+  try {
+    const resp=await fetch('/api/title',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context})});
+    const data=resp.ok?await resp.json():{title:'Your Product',tagline:'Built with your AI team.'};
+    clearInterval(tcDotsTimer);
+    document.getElementById('tc-title').textContent=data.title;
+    document.getElementById('tc-tagline').textContent=data.tagline;
+  } catch {
+    clearInterval(tcDotsTimer);
+    document.getElementById('tc-title').textContent='Your Product';
+    document.getElementById('tc-tagline').textContent='Built with your AI team.';
+  }
+
+  titleCardLoading.style.display='none';
+  titleCardContent.classList.add('show');
 }
 
 function handleOnboardingSubmit(){
   const val=document.getElementById('onboarding-input').value.trim();
   if(!val)return;
   productContext=val;
-  startGame();
+  showTitleCard(val);
 }
 
 document.getElementById('onboarding-submit').addEventListener('click',handleOnboardingSubmit);
