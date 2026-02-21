@@ -6,7 +6,6 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
-  // increment a simple hit counter
   const count = await redis.incr('hit_count');
   res.status(200).json({ ping: 'pong', hit_count: count });
 }
