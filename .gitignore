@@ -1,6 +1,3 @@
-# Environment variables (never commit)
-.env
-
 # Private workshop prep
 WORKSHOP.md
 scripts/gamma-prompt.md
