@@ -44,6 +44,65 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 .task-progress { height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px; overflow: hidden; }
 .task-progress-bar { height: 100%; border-radius: 2px; }
 
+/* ═══ Onboarding Overlay ═══ */
+#onboarding-overlay {
+  position: fixed; inset: 0; background: rgba(10,15,30,0.96);
+  z-index: 500; display: flex; align-items: center; justify-content: center;
+  font-family: monospace;
+}
+#onboarding-box {
+  width: 520px; max-width: 92vw;
+  border: 3px solid #334155;
+  box-shadow: 0 0 0 1px #1e293b, 0 0 60px rgba(34,197,94,0.15);
+}
+#onboarding-header {
+  background: #0f172a; border-bottom: 2px solid #22c55e;
+  padding: 20px 28px 16px;
+}
+#onboarding-header .ob-label {
+  font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
+  color: #22c55e; margin-bottom: 8px;
+}
+#onboarding-header h1 {
+  font-size: 1.4rem; color: #e2e8f0; letter-spacing: 2px; margin: 0;
+  text-transform: uppercase;
+}
+#onboarding-header p {
+  font-size: 0.75rem; color: #64748b; margin: 6px 0 0; letter-spacing: 1px;
+}
+#onboarding-body {
+  background: #0a0f1e; padding: 28px;
+}
+#onboarding-body label {
+  display: block; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+  color: #475569; margin-bottom: 10px;
+}
+#onboarding-input {
+  width: 100%; padding: 12px 14px; font-family: monospace; font-size: 0.9rem;
+  background: #1e293b; border: 2px solid #334155; color: #e2e8f0;
+  outline: none; box-sizing: border-box;
+}
+#onboarding-input:focus { border-color: #22c55e; }
+#onboarding-input::placeholder { color: #334155; }
+#onboarding-submit {
+  margin-top: 16px; width: 100%; padding: 12px; font-family: monospace;
+  font-size: 0.85rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;
+  background: linear-gradient(180deg,#22c55e 0%,#16a34a 50%,#15803d 100%);
+  color: #052e16; border: 3px solid #1a1a1a; cursor: pointer;
+  box-shadow: 0 4px 0 #1a1a1a; transition: transform 0.05s, box-shadow 0.05s;
+}
+#onboarding-submit:hover { background: linear-gradient(180deg,#4ade80 0%,#22c55e 50%,#16a34a 100%); }
+#onboarding-submit:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a1a1a; }
+.ob-agents {
+  display: flex; gap: 8px; margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid #1e293b;
+}
+.ob-agent-chip {
+  flex: 1; padding: 6px 4px; text-align: center;
+  background: #1e293b; border: 1px solid #334155;
+  font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase;
+}
+
 /* ═══ Scroll Overlay ═══ */
 #scroll-scrim { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; }
 #scroll-scrim.open { display:flex; align-items:center; justify-content:center; }
@@ -109,6 +168,28 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 </head>
 <body>
 <canvas id="game"></canvas>
+
+<!-- Onboarding overlay -->
+<div id="onboarding-overlay">
+  <div id="onboarding-box">
+    <div id="onboarding-header">
+      <div class="ob-label">&#9632; System Boot Complete</div>
+      <h1>Welcome to your<br>Building Hub</h1>
+      <p>Your AI team is standing by.</p>
+    </div>
+    <div id="onboarding-body">
+      <label for="onboarding-input">What do you want to build today?</label>
+      <input id="onboarding-input" type="text" placeholder="e.g. a tool that helps indie devs ship faster..." autocomplete="off" />
+      <button id="onboarding-submit">&#9654; Assemble My Team</button>
+      <div class="ob-agents">
+        <div class="ob-agent-chip" style="color:#22c55e">&#9632; BizOps</div>
+        <div class="ob-agent-chip" style="color:#8b5cf6">&#9632; Researcher</div>
+        <div class="ob-agent-chip" style="color:#ec4899">&#9632; Designer</div>
+        <div class="ob-agent-chip" style="color:#3b82f6">&#9632; Engineer</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Scroll overlay for agent findings -->
 <div id="scroll-scrim">
@@ -182,7 +263,7 @@ async function fetchAgentFindings(agentName) {
   try {
     const resp = await fetch("/api/agent", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ agent: agentName }),
+      body: JSON.stringify({ agent: agentName, context: productContext || undefined }),
     });
     if (!resp.ok) throw new Error("API " + resp.status);
     const data = await resp.json();
@@ -527,11 +608,14 @@ const keys={};
 const dialog={active:false,text:"",displayedChars:0,charTimer:0,agentIndex:-1,phase:"typing",selectedOption:0};
 let currentZoneName="",zoneNameTimer=0,lastZoneKey="",activePhase="discover",gameTime=0;
 let discoverVisited=false;
+let productContext="";
+let onboardingOpen=true;
 
 // ═══════════════════════════════════════════
 // INPUT
 // ═══════════════════════════════════════════
 window.addEventListener('keydown',e=>{
+  if(onboardingOpen)return;
   keys[e.key]=true;
   if(dialog.active){
     if(e.key===' '||e.key==='Enter'){e.preventDefault();handleDialogInput();}
@@ -1027,7 +1111,26 @@ function draw(){
 
 function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
 camera.x=player.px*SCALE-canvas.width/2;camera.y=player.py*SCALE-canvas.height/2;
-gameLoop();
+
+// Onboarding
+function startGame(){
+  onboardingOpen=false;
+  document.getElementById('onboarding-overlay').style.display='none';
+  gameLoop();
+}
+
+function handleOnboardingSubmit(){
+  const val=document.getElementById('onboarding-input').value.trim();
+  if(!val)return;
+  productContext=val;
+  startGame();
+}
+
+document.getElementById('onboarding-submit').addEventListener('click',handleOnboardingSubmit);
+document.getElementById('onboarding-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')handleOnboardingSubmit();
+});
+document.getElementById('onboarding-input').focus();
 </script>
 </body>
 </html>
