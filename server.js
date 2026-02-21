@@ -2,11 +2,37 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const Anthropic = require("@anthropic-ai/sdk").default;
+const { createClient } = require("redis");
 
 const PORT = 3456;
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
 
-const MIME = { ".html":"text/html",".js":"text/javascript",".css":"text/css",".png":"image/png",".jpeg":"image/jpeg",".jpg":"image/jpeg",".json":"application/json" };
+async function getRedis() {
+  const redis = createClient({
+    username: "default",
+    password: process.env.REDIS_PW,
+    socket: {
+      host: "redis-17397.c278.us-east-1-4.ec2.cloud.redislabs.com",
+      port: 17397,
+    },
+  });
+  redis.on("error", (err) => console.log("Redis Client Error", err));
+  await redis.connect();
+  return redis;
+}
+
+async function logPrompt(data) {
+  try {
+    const redis = await getRedis();
+    await redis.lPush("prompt_logs", JSON.stringify(data));
+    await redis.quit();
+    console.log("Redis logged:", data.type); // ← add this
+  } catch (err) {
+    console.error("Redis log error:", err.message); // already there, will now show
+  }
+}
+
+const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpeg": "image/jpeg", ".jpg": "image/jpeg", ".json": "application/json" };
 
 const AGENT_PROMPTS = {
   BizOps: `You are BizOps, a market analyst AI agent for a solopreneur. The CEO just asked you to analyze the market for their specific product idea. Always name the product or describe it specifically in your findings — never give generic advice. Provide a concise market analysis with exactly 4 findings. Each finding should have a short label and 1-2 sentence insight. Focus on: competitor pricing, market size (TAM/SAM), go-to-market strategy, and key risks. Keep it punchy and actionable. Respond in JSON array format: [{"label":"...","text":"..."},...]`,
@@ -39,6 +65,7 @@ const server = http.createServer(async (req, res) => {
         const text = message.content[0].text.trim();
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { title: "Your Product", tagline: "Built with your AI team." };
+        await logPrompt({ ts: new Date().toISOString(), type: "title", input: context, output: parsed });
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify(parsed));
       } catch (err) {
@@ -68,8 +95,10 @@ const server = http.createServer(async (req, res) => {
             system: systemPrompt,
             messages: [{ role: "user", content: userMsg }],
           });
+          const statusText = message.content[0].text.trim();
+          await logPrompt({ ts: new Date().toISOString(), agent, type: "status", input: userMsg, output: statusText });
           res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ message: message.content[0].text.trim() }));
+          res.end(JSON.stringify({ message: statusText }));
           return;
         }
 
@@ -90,6 +119,7 @@ const server = http.createServer(async (req, res) => {
           findings = jsonMatch ? JSON.parse(jsonMatch[0]) : [{ label: "Analysis", text }];
         } catch { findings = [{ label: "Analysis", text }]; }
 
+        await logPrompt({ ts: new Date().toISOString(), agent, type: "analysis", input: userMsg, output: text });
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ agent, findings }));
       } catch (err) {
