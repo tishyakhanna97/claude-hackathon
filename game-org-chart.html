@@ -5,226 +5,322 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solopreneur - AI Org World</title>
 <style>
+/* ═══ Color Scheme ═══ */
+:root {
+  --amaranth:   #DB3E55;
+  --forest:     #40812E;
+  --moss:       #7FC761;
+  --mint:       #75C4A4;
+  --mauve-d:    #634255;
+  --mauve:      #9D7375;
+  --sand:       #DCB5A3;
+  --fawn:       #D4B269;
+  --sky:        #63ACF0;
+  --granite:    #87888E;
+  --pk-black:   #1a1a1a;
+  --pk-white:   #f8f4ec;
+  --pk-cream:   #e8dfc8;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f172a; overflow: hidden; font-family: monospace; }
+body { background: var(--mauve-d); overflow: hidden; font-family: monospace; }
 canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* ═══ Pokémon Dialog Box System ═══ */
+.poke-box {
+  position: relative;
+  background: var(--pk-white);
+  border: 4px solid var(--pk-black);
+  box-shadow: inset 0 0 0 2px var(--pk-black);
+}
+.pk-corner {
+  position: absolute; width: 13px; height: 13px;
+  background: var(--amaranth); border: 2px solid var(--pk-black);
+  border-radius: 50%; z-index: 20; pointer-events: none;
+}
+.pk-tl { top: -8px; left: -8px; }
+.pk-tr { top: -8px; right: -8px; }
+.pk-bl { bottom: -8px; left: -8px; }
+.pk-br { bottom: -8px; right: -8px; }
+
+/* ═══ Pixel-Art Button System ═══ */
+.poke-btn {
+  font-family: monospace; font-size: 0.8rem; font-weight: bold;
+  text-transform: uppercase; letter-spacing: 2px;
+  padding: 9px 20px; border: 3px solid var(--pk-black);
+  cursor: pointer; position: relative; color: var(--pk-black);
+  box-shadow: 4px 4px 0 var(--pk-black);
+  background-image: linear-gradient(to bottom,
+    rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.55) 32%,
+    transparent 32%, rgba(0,0,0,0.08) 100%);
+  image-rendering: pixelated;
+  transition: none;
+}
+.poke-btn:hover { filter: brightness(1.1); }
+.poke-btn:active { transform: translate(4px,4px); box-shadow: none; }
+.poke-btn-green { background-color: var(--moss); }
+.poke-btn-fawn  { background-color: var(--fawn); }
+.poke-btn-red   { background-color: var(--amaranth); color: var(--pk-white); }
+.poke-btn-sky   { background-color: var(--sky); }
+.poke-btn-grey  { background-color: var(--granite); color: var(--pk-white); }
+.poke-btn-mint  { background-color: var(--mint); }
+
+/* ═══ Detail Panel ═══ */
 #detail-panel {
   position: fixed; top: 0; right: 0; width: 420px; max-width: 92vw; height: 100vh;
-  background: #0f172a; border-left: 2px solid #334155; z-index: 100;
+  background: var(--mauve-d); border-left: 4px solid var(--pk-black); z-index: 100;
   transform: translateX(100%); transition: transform 0.25s ease;
-  display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  box-shadow: -6px 0 0 0 var(--pk-black);
 }
 #detail-panel.open { transform: translateX(0); }
-#detail-scrim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; display: none; }
+#detail-scrim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(60,30,40,0.55); z-index: 99; display: none; }
 #detail-scrim.open { display: block; }
-.dp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #1e293b; }
-.dp-header h2 { color: #e2e8f0; font-size: 1rem; margin: 0; font-family: monospace; }
-.dp-badge { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; margin-right: 10px; font-weight: 700; font-family: monospace; }
-.dp-close { background: none; border: none; color: #64748b; font-size: 1.4rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.dp-close:hover { background: #1e293b; color: #e2e8f0; }
-.dp-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 0.8rem; line-height: 1.6; color: #94a3b8; font-family: monospace; }
+.dp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 3px solid var(--pk-black);
+  background: var(--mauve);
+}
+.dp-header h2 { color: var(--pk-white); font-size: 1rem; margin: 0; font-family: monospace; }
+.dp-badge {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
+  padding: 3px 8px; border: 2px solid var(--pk-black);
+  margin-right: 10px; font-weight: 700; font-family: monospace; background: var(--pk-white);
+}
+.dp-close {
+  background: var(--amaranth); border: 2px solid var(--pk-black);
+  color: var(--pk-white); font-size: 1.1rem; cursor: pointer;
+  padding: 2px 8px; font-weight: bold;
+  box-shadow: 2px 2px 0 var(--pk-black);
+}
+.dp-close:active { transform: translate(2px,2px); box-shadow: none; }
+.dp-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 0.8rem; line-height: 1.6; color: var(--sand); font-family: monospace; }
 .dp-section { margin-bottom: 16px; }
-.dp-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
+.dp-section-title {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--fawn); margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 2px solid var(--mauve);
+}
 .dp-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
-.dp-info-label { color: #475569; font-size: 0.7rem; }
-.dp-info-value { color: #e2e8f0; font-size: 0.75rem; }
-.dp-tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 2px 0; }
-.dp-tag-skill { background: rgba(139,92,246,0.15); color: #a78bfa; }
-.dp-tag-mcp { background: rgba(16,185,129,0.12); color: #6ee7b7; }
-.task-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; background: #1e293b; border-left: 3px solid #475569; }
-.task-item.running { border-left-color: #fbbf24; }
-.task-item.thinking { border-left-color: #8b5cf6; }
-.task-item.done { border-left-color: #22c55e; opacity: 0.6; }
+.dp-info-label { color: var(--granite); font-size: 0.7rem; }
+.dp-info-value { color: var(--pk-white); font-size: 0.75rem; }
+.dp-tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border: 1px solid var(--pk-black); margin: 2px 2px 2px 0; }
+.dp-tag-skill { background: var(--mauve); color: var(--pk-white); }
+.dp-tag-mcp   { background: var(--mint);  color: var(--pk-black); }
+.task-item { padding: 8px 10px; margin-bottom: 6px; background: var(--mauve); border-left: 4px solid var(--granite); border: 1px solid var(--pk-black); }
+.task-item.running  { border-left: 4px solid var(--fawn); }
+.task-item.thinking { border-left: 4px solid var(--sky); }
+.task-item.done     { border-left: 4px solid var(--moss); opacity: 0.65; }
 .task-status { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-.task-status.running { color: #fbbf24; }
-.task-status.thinking { color: #8b5cf6; }
-.task-status.done { color: #22c55e; }
-.task-name { color: #e2e8f0; font-size: 0.75rem; margin-bottom: 2px; }
-.task-detail { color: #64748b; font-size: 0.65rem; }
-.task-progress { height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px; overflow: hidden; }
-.task-progress-bar { height: 100%; border-radius: 2px; }
+.task-status.running  { color: var(--fawn); }
+.task-status.thinking { color: var(--sky); }
+.task-status.done     { color: var(--moss); }
+.task-name { color: var(--pk-white); font-size: 0.75rem; margin-bottom: 2px; }
+.task-detail { color: var(--granite); font-size: 0.65rem; }
+.task-progress { height: 4px; background: var(--mauve-d); border: 1px solid var(--pk-black); margin-top: 5px; overflow: hidden; }
+.task-progress-bar { height: 100%; }
 
 /* ═══ Onboarding Overlay ═══ */
 #onboarding-overlay {
-  position: fixed; inset: 0; background: rgba(10,15,30,0.96);
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    45deg, var(--mauve-d) 0px, var(--mauve-d) 4px,
+    rgba(99,66,85,0.7) 4px, rgba(99,66,85,0.7) 8px);
   z-index: 500; display: flex; align-items: center; justify-content: center;
   font-family: monospace;
 }
 #onboarding-box {
   width: 520px; max-width: 92vw;
-  border: 3px solid #334155;
-  box-shadow: 0 0 0 1px #1e293b, 0 0 60px rgba(34,197,94,0.15);
+  box-shadow: 6px 6px 0 var(--pk-black);
 }
 #onboarding-header {
-  background: #0f172a; border-bottom: 2px solid #22c55e;
+  background: var(--forest); border-bottom: 4px solid var(--pk-black);
   padding: 20px 28px 16px;
 }
 #onboarding-header .ob-label {
   font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
-  color: #22c55e; margin-bottom: 8px;
+  color: var(--moss); margin-bottom: 8px;
 }
 #onboarding-header h1 {
-  font-size: 1.4rem; color: #e2e8f0; letter-spacing: 2px; margin: 0;
-  text-transform: uppercase;
+  font-size: 1.4rem; color: var(--pk-white); letter-spacing: 2px; margin: 0;
+  text-transform: uppercase; text-shadow: 2px 2px 0 var(--pk-black);
 }
 #onboarding-header p {
-  font-size: 0.75rem; color: #64748b; margin: 6px 0 0; letter-spacing: 1px;
+  font-size: 0.75rem; color: var(--sand); margin: 6px 0 0; letter-spacing: 1px;
 }
 #onboarding-body {
-  background: #0a0f1e; padding: 28px;
+  background: var(--pk-white); padding: 24px 28px 28px;
 }
 #onboarding-body label {
   display: block; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
-  color: #475569; margin-bottom: 10px;
+  color: var(--mauve-d); margin-bottom: 10px; font-weight: bold;
 }
 #onboarding-input {
-  width: 100%; padding: 12px 14px; font-family: monospace; font-size: 0.9rem;
-  background: #1e293b; border: 2px solid #334155; color: #e2e8f0;
+  width: 100%; padding: 10px 14px; font-family: monospace; font-size: 0.9rem;
+  background: var(--pk-cream); border: 3px solid var(--pk-black); color: var(--pk-black);
   outline: none; box-sizing: border-box;
 }
-#onboarding-input:focus { border-color: #22c55e; }
-#onboarding-input::placeholder { color: #334155; }
-#onboarding-submit {
-  margin-top: 16px; width: 100%; padding: 12px; font-family: monospace;
-  font-size: 0.85rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;
-  background: linear-gradient(180deg,#22c55e 0%,#16a34a 50%,#15803d 100%);
-  color: #052e16; border: 3px solid #1a1a1a; cursor: pointer;
-  box-shadow: 0 4px 0 #1a1a1a; transition: transform 0.05s, box-shadow 0.05s;
-}
-#onboarding-submit:hover { background: linear-gradient(180deg,#4ade80 0%,#22c55e 50%,#16a34a 100%); }
-#onboarding-submit:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a1a1a; }
+#onboarding-input:focus { border-color: var(--forest); box-shadow: 2px 2px 0 var(--forest); }
+#onboarding-input::placeholder { color: var(--granite); }
+#onboarding-submit { margin-top: 16px; width: 100%; }
 .ob-agents {
   display: flex; gap: 8px; margin-top: 20px; padding-top: 16px;
-  border-top: 1px solid #1e293b;
+  border-top: 2px solid var(--pk-black);
 }
 .ob-agent-chip {
   flex: 1; padding: 6px 4px; text-align: center;
-  background: #1e293b; border: 1px solid #334155;
+  background: var(--pk-cream); border: 2px solid var(--pk-black);
   font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--pk-black); font-weight: bold;
 }
 
 /* ═══ Title Card ═══ */
 #title-card {
-  position: fixed; inset: 0; background: #0a0f1e;
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    45deg, var(--mauve-d) 0px, var(--mauve-d) 4px,
+    rgba(99,66,85,0.7) 4px, rgba(99,66,85,0.7) 8px);
   z-index: 400; display: none; align-items: center; justify-content: center;
   font-family: monospace; transition: all 0.4s ease;
 }
 #title-card.show { display: flex; }
 #title-card.as-header {
-  inset: unset; top: 0; left: 0; right: 0; height: 44px;
-  background: rgba(10,15,30,0.95); border-bottom: 1px solid #1e293b;
+  inset: unset; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--forest); border-bottom: 4px solid var(--pk-black);
   align-items: center; justify-content: flex-start;
   padding: 0 16px; display: flex;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 0 var(--pk-black);
 }
 #title-card-inner { text-align: center; padding: 40px; max-width: 600px; transition: all 0.4s ease; }
 #title-card.as-header #title-card-inner {
   display: flex; align-items: center; gap: 16px; padding: 0; text-align: left;
 }
 #title-card-loading {
-  color: #334155; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--sand); font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;
 }
 #title-card-content { display: none; }
 #title-card-content.show { display: block; }
 #title-card.as-header #title-card-content { display: flex; align-items: center; gap: 14px; }
 .tc-label {
   font-size: 0.6rem; letter-spacing: 4px; text-transform: uppercase;
-  color: #22c55e; margin-bottom: 24px;
+  color: var(--moss); margin-bottom: 24px;
 }
 #title-card.as-header .tc-label { display: none; }
 #tc-title {
   font-size: clamp(2.4rem, 7vw, 4rem); font-weight: bold; letter-spacing: 4px;
-  text-transform: uppercase; color: #f1f5f9;
-  text-shadow: 0 0 40px rgba(34,197,94,0.4), 0 0 80px rgba(34,197,94,0.15);
+  text-transform: uppercase; color: var(--pk-white);
+  text-shadow: 4px 4px 0 var(--pk-black), 0 0 40px rgba(127,199,97,0.4);
   margin-bottom: 16px; line-height: 1.1; transition: all 0.4s ease;
 }
 #title-card.as-header #tc-title {
   font-size: 0.95rem; letter-spacing: 3px; margin-bottom: 0;
-  text-shadow: none; color: #22c55e;
+  text-shadow: 1px 1px 0 var(--pk-black); color: var(--pk-white);
 }
 #tc-tagline {
-  font-size: 0.9rem; color: #64748b; letter-spacing: 2px; margin-bottom: 40px;
+  font-size: 0.9rem; color: var(--sand); letter-spacing: 2px; margin-bottom: 40px;
   transition: all 0.4s ease;
 }
 #title-card.as-header #tc-tagline {
-  font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 0; color: #334155;
-  border-left: 1px solid #1e293b; padding-left: 14px;
+  font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 0; color: var(--moss);
+  border-left: 3px solid var(--pk-black); padding-left: 14px;
 }
-#tc-begin {
-  font-family: monospace; font-size: 0.8rem; font-weight: bold;
-  letter-spacing: 3px; text-transform: uppercase;
-  padding: 12px 36px; border: 2px solid #22c55e; background: transparent;
-  color: #22c55e; cursor: pointer; transition: all 0.15s;
-}
-#tc-begin:hover { background: #22c55e; color: #052e16; }
+#tc-begin { display: inline-block; }
 #title-card.as-header #tc-begin { display: none; }
 .tc-scanline {
   position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
 }
 #title-card.as-header .tc-scanline { display: none; }
 
 /* ═══ Scroll Overlay ═══ */
-#scroll-scrim { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; }
+#scroll-scrim { position:fixed; inset:0; background:rgba(60,20,35,0.7); z-index:200; display:none; }
 #scroll-scrim.open { display:flex; align-items:center; justify-content:center; }
 #scroll-wrap {
-  width: 420px; max-width: 92vw; max-height: 85vh;
+  width: 440px; max-width: 92vw; max-height: 85vh;
   display: flex; flex-direction: column; image-rendering: pixelated;
+  box-shadow: 6px 6px 0 var(--pk-black);
 }
-/* Top spindle */
 .scroll-spindle {
-  height: 28px; background: #8b6a3e;
-  border: 3px solid #5c3d1e; position: relative; z-index: 2;
-  box-shadow: inset 0 4px 0 #a07d4e, inset 0 -4px 0 #6b4c2a;
+  height: 28px; background: var(--fawn);
+  border: 3px solid var(--pk-black); position: relative; z-index: 2;
+  box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -4px 0 rgba(0,0,0,0.25);
 }
 .scroll-spindle::before, .scroll-spindle::after {
   content:''; position:absolute; top:-6px; width:22px; height:38px;
-  background:#6b4c2a; border:3px solid #3d2a12; border-radius:4px;
+  background: var(--mauve-d); border:3px solid var(--pk-black); border-radius:3px;
 }
 .scroll-spindle::before { left:-14px; }
 .scroll-spindle::after { right:-14px; }
-/* Parchment body */
 .scroll-body {
-  background: #f0deb4;
-  border-left: 6px solid #c9a96e; border-right: 6px solid #c9a96e;
-  box-shadow: inset 4px 0 8px rgba(0,0,0,0.08), inset -4px 0 8px rgba(0,0,0,0.08);
+  background: var(--sand);
+  border-left: 5px solid var(--pk-black); border-right: 5px solid var(--pk-black);
   padding: 20px 24px; overflow-y: auto; flex: 1; min-height: 120px; max-height: 55vh;
-  font-family: monospace; color: #3d2a12; font-size: 13px; line-height: 1.7;
+  font-family: monospace; color: var(--mauve-d); font-size: 13px; line-height: 1.7;
 }
 .scroll-body::-webkit-scrollbar { width:6px; }
-.scroll-body::-webkit-scrollbar-thumb { background:#c9a96e; border-radius:3px; }
-.scroll-from { font-size:11px; color:#8b6a3e; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; }
-.scroll-title { font-size:16px; font-weight:bold; color:#3d2a12; margin-bottom:12px; border-bottom:2px dashed #c9a96e; padding-bottom:8px; }
-.scroll-finding { margin-bottom:10px; padding-left:12px; border-left:3px solid #c9a96e; }
-.scroll-finding b { color:#5c3d1e; }
-/* Button row */
+.scroll-body::-webkit-scrollbar-thumb { background: var(--mauve); border: 1px solid var(--pk-black); }
+.scroll-from { font-size:11px; color: var(--mauve-d); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; font-weight:bold; }
+.scroll-title { font-size:16px; font-weight:bold; color: var(--mauve-d); margin-bottom:12px; border-bottom:3px solid var(--pk-black); padding-bottom:8px; }
+.scroll-finding { margin-bottom:10px; padding-left:12px; border-left:4px solid var(--forest); }
+.scroll-finding b { color: var(--forest); }
 .scroll-actions {
-  background: #e8d4a8; border-left:6px solid #c9a96e; border-right:6px solid #c9a96e;
-  padding: 12px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: var(--pk-cream); border-left:5px solid var(--pk-black); border-right:5px solid var(--pk-black);
+  border-top: 3px solid var(--pk-black);
+  padding: 12px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
 }
 .scroll-btn {
-  font-family: monospace; font-size: 13px; font-weight: bold; text-transform: uppercase;
-  letter-spacing: 1px; padding: 8px 22px; border: 3px solid #1a1a1a; cursor: pointer;
+  font-family: monospace; font-size: 12px; font-weight: bold; text-transform: uppercase;
+  letter-spacing: 1px; padding: 8px 18px; border: 3px solid var(--pk-black); cursor: pointer;
   image-rendering: pixelated; position: relative;
-  box-shadow: 0 4px 0 #1a1a1a;
-  transition: transform 0.05s, box-shadow 0.05s;
+  box-shadow: 4px 4px 0 var(--pk-black);
+  background-image: linear-gradient(to bottom,
+    rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 32%,
+    transparent 32%, rgba(0,0,0,0.08) 100%);
+  transition: none;
 }
-.scroll-btn:active { transform:translateY(3px); box-shadow:0 1px 0 #1a1a1a; }
-.scroll-btn-next {
-  background: linear-gradient(180deg, #5ce65c 0%, #22b822 50%, #1a9a1a 100%);
-  color: #0a3d0a;
-}
-.scroll-btn-retry {
-  background: linear-gradient(180deg, #ffb347 0%, #e68a00 50%, #cc7700 100%);
-  color: #4a2800;
-}
+.scroll-btn:active { transform:translate(4px,4px); box-shadow:none; }
+.scroll-btn-next  { background-color: var(--moss);  color: var(--pk-black); }
+.scroll-btn-retry { background-color: var(--fawn);  color: var(--pk-black); }
 .scroll-retry-input {
-  width: 100%; padding: 9px 12px; font-family: monospace; font-size: 13px;
-  background: #f5ecd4; border: 2px solid #c9a96e; color: #3d2a12;
-  outline: none; display:none; margin-top: 4px;
+  width: 100%; padding: 8px 12px; font-family: monospace; font-size: 13px;
+  background: var(--pk-white); border: 3px solid var(--pk-black); color: var(--mauve-d);
+  outline: none; display:none; margin-top: 6px;
 }
-.scroll-retry-input:focus { border-color: #e68a00; }
+.scroll-retry-input:focus { border-color: var(--forest); }
 .scroll-retry-input.show { display:block; }
+
+/* ═══ Task Complete Text Box ═══ */
+#task-box-wrap {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 520px; max-width: 96vw; z-index: 300; display: none;
+  font-family: monospace; padding-bottom: 12px;
+}
+#task-box-wrap.open { display: block; }
+#task-box {
+  box-shadow: 6px 6px 0 var(--pk-black);
+}
+.task-box-agent-bar { height: 4px; }
+#task-box-from {
+  font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase;
+  padding: 8px 14px 2px; font-weight: bold;
+}
+#task-box-msg {
+  font-size: 0.85rem; color: var(--pk-black); padding: 6px 14px 10px; line-height: 1.5;
+}
+#task-box-options { display: flex; gap: 10px; padding: 0 14px 14px; }
+.task-box-btn {
+  font-family: monospace; font-size: 0.8rem; font-weight: bold;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 8px 24px; border: 3px solid var(--pk-black); cursor: pointer;
+  box-shadow: 4px 4px 0 var(--pk-black);
+  background-image: linear-gradient(to bottom,
+    rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 32%,
+    transparent 32%, rgba(0,0,0,0.08) 100%);
+  transition: none;
+}
+.task-box-btn:active { transform: translate(4px,4px); box-shadow: none; }
+#task-box-yes   { background-color: var(--moss);    color: var(--pk-black); }
+#task-box-retry { background-color: var(--fawn);    color: var(--pk-black); }
 </style>
 </head>
 <body>
@@ -232,7 +328,9 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 
 <!-- Onboarding overlay -->
 <div id="onboarding-overlay">
-  <div id="onboarding-box">
+  <div id="onboarding-box" class="poke-box">
+    <span class="pk-corner pk-tl"></span><span class="pk-corner pk-tr"></span>
+    <span class="pk-corner pk-bl"></span><span class="pk-corner pk-br"></span>
     <div id="onboarding-header">
       <div class="ob-label">&#9632; System Boot Complete</div>
       <h1>Welcome to your<br>Building Hub</h1>
@@ -241,12 +339,12 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
     <div id="onboarding-body">
       <label for="onboarding-input">What do you want to build today?</label>
       <input id="onboarding-input" type="text" placeholder="e.g. a tool that helps indie devs ship faster..." autocomplete="off" />
-      <button id="onboarding-submit">&#9654; Assemble My Team</button>
+      <button id="onboarding-submit" class="poke-btn poke-btn-green">&#9654; Assemble My Team</button>
       <div class="ob-agents">
-        <div class="ob-agent-chip" style="color:#22c55e">&#9632; BizOps</div>
-        <div class="ob-agent-chip" style="color:#8b5cf6">&#9632; Researcher</div>
-        <div class="ob-agent-chip" style="color:#ec4899">&#9632; Designer</div>
-        <div class="ob-agent-chip" style="color:#3b82f6">&#9632; Engineer</div>
+        <div class="ob-agent-chip" style="color:#7FC761">&#9632; BizOps</div>
+        <div class="ob-agent-chip" style="color:#634255">&#9632; Researcher</div>
+        <div class="ob-agent-chip" style="color:#9D7375">&#9632; Designer</div>
+        <div class="ob-agent-chip" style="color:#63ACF0">&#9632; Engineer</div>
       </div>
     </div>
   </div>
@@ -261,14 +359,31 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
       <div class="tc-label">&#9632; Your product</div>
       <div id="tc-title"></div>
       <div id="tc-tagline"></div>
-      <button id="tc-begin">Enter the hub &#9654;</button>
+      <button id="tc-begin" class="poke-btn poke-btn-green">Enter the hub &#9654;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task complete text box (yes/retry prompt) -->
+<div id="task-box-wrap">
+  <div id="task-box" class="poke-box">
+    <span class="pk-corner pk-tl"></span><span class="pk-corner pk-tr"></span>
+    <span class="pk-corner pk-bl"></span><span class="pk-corner pk-br"></span>
+    <div class="task-box-agent-bar" id="task-box-bar"></div>
+    <div id="task-box-from"></div>
+    <div id="task-box-msg"></div>
+    <div id="task-box-options">
+      <button class="task-box-btn" id="task-box-yes">YES — View Report</button>
+      <button class="task-box-btn" id="task-box-retry">RETRY</button>
     </div>
   </div>
 </div>
 
 <!-- Scroll overlay for agent findings -->
 <div id="scroll-scrim">
-  <div id="scroll-wrap">
+  <div id="scroll-wrap" class="poke-box">
+    <span class="pk-corner pk-tl"></span><span class="pk-corner pk-tr"></span>
+    <span class="pk-corner pk-bl"></span><span class="pk-corner pk-br"></span>
     <div class="scroll-spindle"></div>
     <div class="scroll-body" id="scroll-body"></div>
     <div class="scroll-actions">
@@ -280,6 +395,7 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   </div>
 </div>
 
+<script src="/agents.js"></script>
 <div id="detail-scrim"></div>
 <div id="detail-panel">
   <div class="dp-header">
@@ -289,61 +405,8 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   <div class="dp-body" id="dp-body"></div>
 </div>
 <script>
-// ═══════════════════════════════════════════
-// DATA — Only discover, design, build
-// ═══════════════════════════════════════════
-const AGENT_TASKS = {
-  "BizOps": [
-    { name: "Analyzing competitor pricing", status: "running", detail: "/discover — scanning 5 competitors", progress: 40 },
-    { name: "TAM/SAM/SOM estimation", status: "thinking", detail: "/discover — modeling market size", progress: 20 },
-    { name: "Go-to-market draft v1", status: "done", detail: "/discover — launch strategy complete", progress: 100 },
-  ],
-  "Researcher": [
-    { name: "Scraping competitor features", status: "running", detail: "/discover — Context7 deep dive", progress: 55 },
-    { name: "User sentiment analysis", status: "thinking", detail: "/discover — processing reviews", progress: 25 },
-    { name: "Trend report: AI tooling 2026", status: "done", detail: "/discover — 12 key findings", progress: 100 },
-  ],
-  "Designer": [
-    { name: "Wireframing onboarding flow", status: "running", detail: "/design — 3 of 5 screens done", progress: 60 },
-    { name: "Color contrast audit (WCAG)", status: "thinking", detail: "/design — checking AA compliance", progress: 45 },
-    { name: "Component library audit", status: "done", detail: "/design — catalogued 24 components", progress: 100 },
-  ],
-  "Engineer": [
-    { name: "Building auth module", status: "running", detail: "/build — JWT implementation", progress: 65 },
-    { name: "Planning API structure", status: "thinking", detail: "/build — REST vs GraphQL", progress: 30 },
-    { name: "Updated error handlers", status: "done", detail: "/build — added 4 error types", progress: 100 },
-  ],
-};
-
-// Agent findings — populated by real API calls, with fallback demo data
+// Agent findings cache — populated by real API calls, with fallback demo data
 const AGENT_FINDINGS = {};
-const DEMO_FINDINGS = {
-  "BizOps": { title:"Market Analysis Report", findings:[
-    {label:"Competitor Pricing",text:"3 of 5 competitors charge $15-25/mo. One outlier at $49/mo bundles premium support."},
-    {label:"TAM Estimate",text:"Total addressable market ~$2.4B for AI dev tools. SAM for solo/indie devs: ~$180M."},
-    {label:"Go-to-Market",text:"Recommend freemium with $12/mo pro tier. Launch on Product Hunt + HN."},
-    {label:"Key Risk",text:"Crowded market — differentiation through UX and agent orchestration is the moat."},
-  ]},
-  "Researcher": { title:"Competitive Intelligence Brief", findings:[
-    {label:"Feature Gap",text:"No competitor offers visual agent orchestration. Most use chat-only with no transparency."},
-    {label:"User Sentiment",text:"Reddit/HN: 72% positive on AI coding tools, #1 complaint is 'black box' — users want to see what the AI is doing."},
-    {label:"Trend",text:"Agent-based architectures growing 3x YoY. Multi-agent frameworks gaining traction but lack polish."},
-    {label:"Opportunity",text:"'Game-ified AI dashboard' is a completely unoccupied niche."},
-  ]},
-  "Designer": { title:"Design Direction Brief", findings:[
-    {label:"Core Flow",text:"Onboarding → product input → agent dashboard is the critical path. Keep it under 3 steps to first insight."},
-    {label:"First Screens",text:"Prioritize the onboarding prompt and the agent findings scroll — these are the two moments that make or break the experience."},
-    {label:"Visual Tone",text:"Pixel-retro meets dark SaaS. High contrast, monospace type, and animated sprites signal 'this is different from every other AI tool'."},
-    {label:"UX Risk",text:"The game world can confuse non-gamers. Add a short tooltip layer on first load to orient new users quickly."},
-  ]},
-  "Engineer": { title:"Technical Architecture Plan", findings:[
-    {label:"Tech Stack",text:"Next.js or plain HTML + Vercel serverless functions for the backend. No database needed for MVP — stateless API calls only."},
-    {label:"Data Model",text:"Product context string → agent name → findings array. Store in-memory on client; no persistence required until v2."},
-    {label:"MVP Slice",text:"Ship the onboarding input + one working agent (BizOps) end-to-end before adding Designer and Engineer flows."},
-    {label:"Tech Risk",text:"Anthropic API latency can hit 5-10s. Add a loading state to the scroll so users know the agent is 'thinking', not broken."},
-  ]},
-};
-const AGENT_TITLES = { "BizOps":"Market Analysis Report", "Researcher":"Competitive Intelligence Brief", "Designer":"Design Direction Brief", "Engineer":"Technical Architecture Plan" };
 
 // Fire real API call when agent starts working
 async function fetchAgentFindings(agentName) {
@@ -377,19 +440,7 @@ async function fetchAgentStatus(agentName) {
   }
 }
 
-const AGENTS = [
-  { name:"BizOps", model:"opus", skills:["discover"], mcps:[], desc:"Market analysis & strategy",
-    zone:"discover", color:"#22c55e", darkColor:"#14532d", workRole:"store" },
-  { name:"Researcher", model:"sonnet", skills:["discover"], mcps:["Context7"], desc:"Competitive analysis & trends",
-    zone:"discover", color:"#8b5cf6", darkColor:"#3b0764", workRole:"lab" },
-  { name:"Designer", model:"opus", skills:["design"], mcps:["Chrome DevTools"], desc:"UI/UX & wireframes",
-    zone:"design", color:"#ec4899", darkColor:"#831843", workRole:"studio" },
-  { name:"Engineer", model:"opus", skills:["build"], mcps:["GitHub"], desc:"Architecture & implementation",
-    zone:"build", color:"#3b82f6", darkColor:"#1e3a5f", workRole:"desk" },
-];
-
 const ZONE_NAMES = { discover:"Discovery Zone", design:"Design Zone", build:"Build Zone" };
-const TEAMS = [{ name:"Discovery Sprint", members:["BizOps","Researcher"] }];
 
 // ═══════════════════════════════════════════
 // CONSTANTS
@@ -407,9 +458,9 @@ window.addEventListener('resize', resize); resize();
 // ZONES — Discover is large & nature-themed
 // ═══════════════════════════════════════════
 const ZONES = {
-  discover: { x:2, y:2, w:22, h:18, color:"#22c55e", darkColor:"#166534" },
-  design:   { x:28, y:2, w:14, h:12, color:"#ec4899", darkColor:"#9d174d" },
-  build:    { x:28, y:18, w:14, h:12, color:"#3b82f6", darkColor:"#1e40af" },
+  discover: { x:2, y:2, w:22, h:18, color:"#7FC761", darkColor:"#40812E" },
+  design:   { x:28, y:2, w:14, h:12, color:"#9D7375", darkColor:"#634255" },
+  build:    { x:28, y:18, w:14, h:12, color:"#63ACF0", darkColor:"#3a80c0" },
 };
 
 // Workstation positions (tile coords) & egg positions within discover
@@ -417,24 +468,57 @@ const WORKSTATIONS = {
   store: { x:5, y:5, w:5, h:4 },   // BizOps store
   lab:   { x:16, y:13, w:5, h:4 },  // Researcher lab
 };
-const EGG_POS = {
-  "BizOps":    { x:10, y:7 },
-  "Researcher": { x:10, y:13 },
-  "Designer":  { x:33, y:7 },
-  "Engineer":  { x:33, y:23 },
-};
-const WORK_POS = {
-  "BizOps":    { x:7, y:7 },
-  "Researcher": { x:18, y:15 },
-  "Designer":  { x:34, y:7 },
-  "Engineer":  { x:34, y:23 },
-};
 
+// Area Labels Config (OO structure for easy collaboration)
+// Uses scroll-style rendering with PALETTE colors
+const AREA_LABELS = [
+  {
+    id: "store",
+    title: "STORE",
+    subtitle: "BizOps",
+    position: { x: 7.5, y: 5 },
+    titleColor: "#40812E",
+    subtitleColor: "#634255"
+  },
+  {
+    id: "lab",
+    title: "LAB",
+    subtitle: "Researcher",
+    position: { x: 18.5, y: 13 },
+    titleColor: "#40812E",
+    subtitleColor: "#634255"
+  },
+  {
+    id: "spawn",
+    title: "SPAWN PAD",
+    subtitle: "Deploy Agents",
+    position: { x: 25.5, y: 13 },
+    titleColor: "#40812E",
+    subtitleColor: "#75C4A4"
+  },
+  {
+    id: "design_studio",
+    title: "STUDIO",
+    subtitle: "Designer",
+    position: { x: 35, y: 8 },
+    titleColor: "#634255",
+    subtitleColor: "#9D7375"
+  },
+  {
+    id: "build_workshop",
+    title: "WORKSHOP",
+    subtitle: "Engineer",
+    position: { x: 35, y: 24 },
+    titleColor: "#4A7BB8",
+    subtitleColor: "#63ACF0"
+  }
+];
 // ═══════════════════════════════════════════
 // TILEMAP
 // 0=grass 1=path 2=water 3=zone-floor 4=zone-border
 // 5=flowers 6=tree 7=lab-floor 8=lab-equip(block)
 // 9=store-floor 10=store-shelf(block) 11=dense-tree
+// 12=spawn-pad (walkable, interactive)
 // ═══════════════════════════════════════════
 const map = [];
 for (let y=0;y<ROWS;y++){map[y]=[];for(let x=0;x<COLS;x++)map[y][x]=0;}
@@ -532,7 +616,11 @@ for(let y=ZONES.discover.y+1;y<ZONES.discover.y+ZONES.discover.h-1;y++)
 for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)
   if(map[y][x]===0&&Math.random()<0.03) map[y][x]=5;
 
-// Collision
+// Spawn pad — 2×2 tile area in the corridor between Discover and Design (x:25-26, y:13-14)
+map[13][25]=12; map[13][26]=12;
+map[14][25]=12; map[14][26]=12;
+
+// Collision — tile 12 (spawn pad) is walkable
 function isBlocked(tx,ty){
   if(tx<0||ty<0||tx>=COLS||ty>=ROWS)return true;
   const t=map[ty][tx];
@@ -542,11 +630,29 @@ function isBlocked(tx,ty){
 // ═══════════════════════════════════════════
 // TILE COLORS
 // ═══════════════════════════════════════════
-const GRASS1="#88c070",GRASS2="#78b060",PATH1="#d8b068",PATH2="#c8a058";
-const WATER1="#5090d0",WATER2="#60a0e0";
-const FLOWER_COLORS=["#ff6b6b","#ffd93d","#6bcb77","#4d96ff"];
-const LAB_FL="#8090a0",LAB_FL2="#708090",LAB_EQ="#506070";
-const STORE_FL="#c8a870",STORE_FL2="#b89860",STORE_SH="#6b4226",STORE_SH2="#8b5a3e";
+// ═══════════════════════════════════════════
+// COLOR PALETTE (Scroll-inspired)
+// ═══════════════════════════════════════════
+const PALETTE = {
+  amaranth: "#DB3E55",      // red
+  forestGreen: "#40812E",   // dark green
+  mossGreen: "#7FC761",     // light green
+  mintLeaf: "#75C4A4",      // teal/mint
+  mauveShadow: "#634255",   // dark purple
+  dustyMauve: "#9D7375",    // dusty pink
+  desertSand: "#DCB5A3",    // light tan
+  softFawn: "#D4B269",      // gold/tan
+  coolSky: "#63ACF0",       // blue
+  rosyGranite: "#87888E",   // gray
+  scrollBg: "#F5E6D3",      // scroll paper
+  scrollBorder: "#3d2a12",  // scroll outline
+};
+
+const GRASS1="#7FC761",GRASS2="#40812E",PATH1="#D4B269",PATH2="#b89848";
+const WATER1="#63ACF0",WATER2="#88c8ff";
+const FLOWER_COLORS=[PALETTE.amaranth,PALETTE.softFawn,PALETTE.mintLeaf,PALETTE.dustyMauve];
+const LAB_FL=PALETTE.rosyGranite,LAB_FL2="#6F7078",LAB_EQ=PALETTE.mauveShadow;
+const STORE_FL=PALETTE.desertSand,STORE_FL2=PALETTE.softFawn,STORE_SH=PALETTE.mauveShadow,STORE_SH2=PALETTE.dustyMauve;
 
 function getZoneAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return z;return null;}
 function getZoneKeyAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return k;return"";}
@@ -579,10 +685,10 @@ function claudeBase2(){return[
 function addProps(base,overlays){const s=base.map(r=>[...r]);for(const[y,x,c]of overlays)if(y>=0&&y<16&&x>=0&&x<16)s[y][x]=c;return s;}
 
 // Agent props
-const HAT_Y="#fbbf24",HAT_Yd="#d4a017";
+const HAT_Y="#D4B269",HAT_Yd="#d4a017";
 const BER="#4a4a5a",BERd="#333340",PB_H="#8B6914",PB_T="#3bbef0";
-const TIE="#22c55e",TIEd="#16a34a";
-const GC="#1e293b",GCt="#fbbf24";
+const TIE="#7FC761",TIEd="#40812E";
+const GC="#1e293b",GCt="#D4B269";
 
 const AGENT_PROPS=[
   // BizOps — green tie
@@ -689,22 +795,8 @@ for(const[name,src]of Object.entries(AGENT_IMG_FILES)){
 // ═══════════════════════════════════════════
 const player={x:25,y:10,px:25*TILE,py:10*TILE,moving:false,dir:"left",frame:0,moveTimer:0,targetX:25,targetY:10};
 
-const agents=AGENTS.map((a,i)=>{
-  const ep=EGG_POS[a.name], wp=WORK_POS[a.name];
-  const tasks=AGENT_TASKS[a.name]||[];
-  const activeTask=tasks.find(t=>t.status==="running")||tasks.find(t=>t.status==="thinking")||null;
-  return{
-    ...a,index:i,
-    x:ep.x,y:ep.y,px:ep.x*TILE,py:ep.y*TILE,
-    eggX:ep.x,eggY:ep.y,workX:wp.x,workY:wp.y,
-    moving:false,dir:"down",frame:0,moveTimer:0,targetX:ep.x,targetY:ep.y,
-    wanderTimer:60+Math.random()*120,wanderRadius:2,
-    tasks,activeTask,progressTick:Math.random()*200,
-    // Egg lifecycle
-    state:"egg", // egg | hatching | walking_to_work | working | walking_to_egg
-    hatchTimer:0,hatchTriggered:false,reportedTask:null,
-  };
-});
+// Agents are now created from agents.js Agent class
+const agents = createAgents();
 
 const camera={x:0,y:0};
 const keys={};
@@ -713,6 +805,9 @@ let currentZoneName="",zoneNameTimer=0,lastZoneKey="",activePhase="discover",gam
 let discoverVisited=false;
 let productContext="";
 let onboardingOpen=true;
+let textBoxOpen=false, textBoxAgentName="";
+// Spawn pad dialog state
+const spawnDialog={active:false,options:[],selectedOption:0};
 
 // ═══════════════════════════════════════════
 // INPUT
@@ -720,12 +815,13 @@ let onboardingOpen=true;
 window.addEventListener('keydown',e=>{
   if(onboardingOpen)return;
   keys[e.key]=true;
+  if(textBoxOpen){if(e.key==='Escape')closeTextBox();return;}
   if(dialog.active){
     if(e.key===' '||e.key==='Enter'){e.preventDefault();handleDialogInput();}
     if(e.key==='Escape')closeDialog();
-    if(dialog.phase==="question"){
-      if(e.key==='ArrowUp'||e.key==='w')dialog.selectedOption=0;
-      if(e.key==='ArrowDown'||e.key==='s')dialog.selectedOption=1;
+    if(dialog.phase==="question"||spawnDialog.active){
+      if(e.key==='ArrowUp'||e.key==='w'){dialog.selectedOption=Math.max(0,dialog.selectedOption-1);spawnDialog.selectedOption=Math.max(0,spawnDialog.selectedOption-1);}
+      if(e.key==='ArrowDown'||e.key==='s'){dialog.selectedOption=Math.min(1,dialog.selectedOption+1);spawnDialog.selectedOption=Math.min(spawnDialog.options.length-1,spawnDialog.selectedOption+1);}
     }
     return;
   }
@@ -736,6 +832,16 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{keys[e.key]=false;});
 
 function handleDialogInput(){
+  // Spawn pad dialog
+  if(spawnDialog.active){
+    const chosen=spawnDialog.options[spawnDialog.selectedOption];
+    if(chosen){
+      const target=agents.find(a=>a.name===chosen);
+      if(target)target.triggerHatch();
+    }
+    spawnDialog.active=false;dialog.active=false;dialog.phase="typing";
+    return;
+  }
   if(dialog.phase==="typing"){dialog.displayedChars=dialog.text.length;dialog.phase="done";}
   else if(dialog.phase==="done"){dialog.phase="question";dialog.selectedOption=0;}
   else if(dialog.phase==="question"){
@@ -743,25 +849,46 @@ function handleDialogInput(){
     else closeDialog();
   }
 }
-function closeDialog(){dialog.active=false;dialog.phase="typing";}
+function closeDialog(){dialog.active=false;dialog.phase="typing";spawnDialog.active=false;}
 
 function getAdjacentAgent(){
-  const fx=player.x+(player.dir==="right"?1:player.dir==="left"?-1:0);
-  const fy=player.y+(player.dir==="down"?1:player.dir==="up"?-1:0);
   for(let i=0;i<agents.length;i++){
     if(agents[i].state!=="working"&&agents[i].state!=="egg"&&agents[i].state!=="walking_to_egg")continue;
     const dx=Math.abs(agents[i].x-player.x),dy=Math.abs(agents[i].y-player.y);
     if(dx<=1&&dy<=1&&(dx+dy)<=2)return i;
   }
-  return-1;
+  return -1;
+}
+
+function isAdjacentToSpawnPad(){
+  const checks=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+  for(const[dx,dy]of checks){
+    const tx=player.x+dx,ty=player.y+dy;
+    if(tx>=0&&ty>=0&&tx<COLS&&ty<ROWS&&map[ty][tx]===12)return true;
+  }
+  return false;
+}
+
+function openSpawnDialog(){
+  const available=agents.filter(a=>a.state==="egg"&&a.sleepState==="fresh"&&a.completedTaskCount===0).map(a=>a.name);
+  if(available.length===0){
+    dialog.active=true;dialog.text="All agents are already active or resting.";
+    dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=-1;dialog.phase="typing";dialog.selectedOption=0;
+    return;
+  }
+  spawnDialog.active=true;spawnDialog.options=available;spawnDialog.selectedOption=0;
+  dialog.active=true;dialog.text="Spawn pad: Choose an agent to summon.";
+  dialog.displayedChars=dialog.text.length;dialog.charTimer=0;dialog.agentIndex=-1;dialog.phase="question";dialog.selectedOption=0;
 }
 
 function tryInteract(){
+  // Check spawn pad first
+  if(isAdjacentToSpawnPad()&&!dialog.active){openSpawnDialog();return;}
   const idx=getAdjacentAgent();if(idx===-1)return;
   const a=agents[idx];
   if(a.state==="egg"){
-    dialog.active=true;
-    dialog.text=`A dormant egg... ${a.name} is resting. No active tasks right now.`;
+    const sleepMsg=a.sleepState==="resting"?` ${a.name} has completed their tasks and is resting.`:`A dormant egg... ${a.name} is waiting to be summoned.`;
+    dialog.active=true;dialog.text=sleepMsg;
     dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
     return;
   }
@@ -787,7 +914,7 @@ function openDetailPanel(idx){
   h+='<div class="dp-section"><div class="dp-section-title">Tasks</div>';
   a.tasks.forEach(t=>{
     const icons={running:"⟳",thinking:"◆",done:"✓"};
-    const colors={running:"#fbbf24",thinking:"#8b5cf6",done:"#22c55e"};
+    const colors={running:"#D4B269",thinking:"#634255",done:"#7FC761"};
     h+=`<div class="task-item ${t.status}"><div class="task-status ${t.status}">${icons[t.status]||"○"} ${t.status}</div>`;
     h+=`<div class="task-name">${t.name}</div><div class="task-detail">${t.detail}</div>`;
     if(t.status!=="done")h+=`<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${colors[t.status]}"></div></div>`;
@@ -810,10 +937,33 @@ const scrollScrim=document.getElementById('scroll-scrim');
 const scrollBody=document.getElementById('scroll-body');
 const scrollRetryInput=document.getElementById('scroll-retry-input');
 
+// ─── Task Complete Text Box ───────────────────
+function openTextBox(agentName){
+  const a=agents.find(ag=>ag.name===agentName); if(!a)return;
+  const taskName=a.reportedTask?a.reportedTask.name:"current task";
+  textBoxAgentName=agentName; textBoxOpen=true;
+  document.getElementById('task-box-bar').style.background=a.color;
+  document.getElementById('task-box-from').textContent=agentName.toUpperCase()+" — TASK COMPLETE";
+  document.getElementById('task-box-from').style.color=a.color;
+  document.getElementById('task-box-msg').textContent=`Finished: "${taskName}". Open the full report?`;
+  document.getElementById('task-box-wrap').classList.add('open');
+}
+function closeTextBox(){
+  document.getElementById('task-box-wrap').classList.remove('open');
+  textBoxOpen=false; textBoxAgentName="";
+}
+document.getElementById('task-box-yes').addEventListener('click',()=>{
+  const name=textBoxAgentName; closeTextBox(); openScroll(name);
+});
+document.getElementById('task-box-retry').addEventListener('click',()=>{
+  const a=agents.find(ag=>ag.name===textBoxAgentName);
+  if(a) a.retryTask(AGENT_FINDINGS, fetchAgentFindings);
+  closeTextBox();
+});
+
 function openScroll(agentName){
   const f=AGENT_FINDINGS[agentName]; if(!f)return;
   scrollAgentName=agentName;
-  const agent=AGENTS.find(a=>a.name===agentName);
   let h=`<div class="scroll-from">Report from ${agentName}</div>`;
   h+=`<div class="scroll-title">${f.title}</div>`;
   for(const item of f.findings){
@@ -827,38 +977,23 @@ function openScroll(agentName){
 }
 function closeScroll(){
   scrollScrim.classList.remove('open');
-  scrollOpen=false;scrollAgentName="";
+  scrollOpen=false; scrollAgentName="";
 }
-// NEXT — accept findings, agent returns to egg
+// NEXT — accept findings, agent returns to egg via Agent.acceptTask()
 document.getElementById('scroll-next').addEventListener('click',()=>{
   const a=agents.find(ag=>ag.name===scrollAgentName);
-  if(a){
-    // Mark running task as done
-    a.tasks.forEach(t=>{if(t.status==="running"){t.status="done";t.progress=100;}});
-    a.activeTask=a.tasks.find(t=>t.status==="thinking")||null;
-    // Return to egg
-    a.state="walking_to_egg";a.targetX=a.eggX;a.targetY=a.eggY;a.moving=true;a.moveTimer=0;
-  }
+  if(a) a.acceptTask();
   closeScroll();
 });
-// RETRY — show text input, then reset task
+// RETRY — show text input, then reset task via Agent.retryTask()
 document.getElementById('scroll-retry').addEventListener('click',()=>{
   const input=scrollRetryInput;
   if(!input.classList.contains('show')){input.classList.add('show');input.focus();return;}
-  // Retry: reset task, clear findings so a fresh API call fires
-  const retryName=scrollAgentName;
-  const a=agents.find(ag=>ag.name===retryName);
-  if(a){
-    const runningTask=a.tasks.find(t=>t.status==="done"&&t.progress===100)||a.tasks.find(t=>t.status==="running");
-    if(runningTask){runningTask.progress=10;runningTask.status="running";a.activeTask=runningTask;}
-    a.reportedTask=null;
-    delete AGENT_FINDINGS[retryName]; // force new API call
-    fetchAgentFindings(retryName);
-  }
-  input.classList.remove('show');input.value='';
+  const a=agents.find(ag=>ag.name===scrollAgentName);
+  if(a) a.retryTask(AGENT_FINDINGS, fetchAgentFindings);
+  input.classList.remove('show'); input.value='';
   closeScroll();
 });
-// ESC closes scroll too
 scrollScrim.addEventListener('click',(e)=>{if(e.target===scrollScrim)closeScroll();});
 
 // ═══════════════════════════════════════════
@@ -866,7 +1001,7 @@ scrollScrim.addEventListener('click',(e)=>{if(e.target===scrollScrim)closeScroll
 // ═══════════════════════════════════════════
 const MOVE_SPEED=2;
 function updatePlayer(){
-  if(dialog.active||scrollOpen)return;
+  if(dialog.active||scrollOpen||textBoxOpen)return;
   if(player.moving){
     const tx=player.targetX*TILE,ty=player.targetY*TILE,dx=tx-player.px,dy=ty-player.py;
     const dist=Math.sqrt(dx*dx+dy*dy);
@@ -889,105 +1024,23 @@ function updatePlayer(){
 }
 
 // ═══════════════════════════════════════════
-// AGENT AI — Egg lifecycle
+// AGENT AI — delegated to Agent class (agents.js)
 // ═══════════════════════════════════════════
 function updateAgents(){
-  // Trigger hatching when CEO enters discover zone
-  const ceoZone=getZoneKeyAt(player.x,player.y);
-  if(ceoZone&&!discoverVisited){
-    discoverVisited=true;
-  }
-
-  for(const a of agents){
-    // Progress tick
-    a.progressTick++;
-    if(a.progressTick>60){a.progressTick=0;a.tasks.forEach(t=>{
-      if(t.status==="running"&&t.progress<95)t.progress+=Math.random()*3;
-      if(t.status==="thinking"&&t.progress<80)t.progress+=Math.random()*2;
-    });}
-
-    const inZone=getZoneKeyAt(player.x,player.y)===a.zone;
-
-    // State machine
-    if(a.state==="egg"){
-      if(inZone&&a.activeTask&&!a.hatchTriggered){
-        a.hatchTriggered=true;a.state="hatching";a.hatchTimer=0;
-      }
-    }
-    else if(a.state==="hatching"){
-      a.hatchTimer++;
-      if(a.hatchTimer>80){
-        a.state="walking_to_work";
-        a.targetX=a.workX;a.targetY=a.workY;a.moving=true;a.moveTimer=0;
-      }
-    }
-    else if(a.state==="walking_to_work"){
-      // Move toward workstation
-      if(!a.moving){
-        if(a.x===a.workX&&a.y===a.workY){a.state="working";a.wanderTimer=60+Math.random()*120;
-          // Fire real API calls
-          if(!AGENT_FINDINGS[a.name]) fetchAgentFindings(a.name);
-          if(!AGENT_STATUS[a.name]) fetchAgentStatus(a.name);
-        }
-        else{
-          // Simple pathfinding: move one step closer
-          const dx=Math.sign(a.workX-a.x),dy=Math.sign(a.workY-a.y);
-          let nx=a.x+dx,ny=a.y+dy;
-          if(!isBlocked(nx,ny)){a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
-            if(dx<0)a.dir="left";else if(dx>0)a.dir="right";else if(dy<0)a.dir="up";else a.dir="down";
-          }else{// Try just horizontal or vertical
-            if(dx&&!isBlocked(a.x+dx,a.y)){a.targetX=a.x+dx;a.targetY=a.y;a.moving=true;a.moveTimer=0;a.dir=dx<0?"left":"right";}
-            else if(dy&&!isBlocked(a.x,a.y+dy)){a.targetX=a.x;a.targetY=a.y+dy;a.moving=true;a.moveTimer=0;a.dir=dy<0?"up":"down";}
-          }
-        }
-      }
-    }
-    else if(a.state==="working"){
-      // Check if running task hit >=95% — trigger scroll report
-      if(!a.reportedTask&&a.activeTask&&a.activeTask.status==="running"&&a.activeTask.progress>=95&&AGENT_FINDINGS[a.name]&&!scrollOpen){
-        a.reportedTask=a.activeTask;
-        openScroll(a.name);
-      }
-      // Wander near workstation
-      a.wanderTimer--;
-      if(a.wanderTimer<=0&&!a.moving){
-        const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
-        const d=dirs[Math.floor(Math.random()*4)];
-        const nx=a.x+d[0],ny=a.y+d[1];
-        const dfh=Math.abs(nx-a.workX)+Math.abs(ny-a.workY);
-        if(!isBlocked(nx,ny)&&dfh<=a.wanderRadius&&!(nx===player.x&&ny===player.y)){
-          a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
-          if(d[0]<0)a.dir="left";else if(d[0]>0)a.dir="right";else if(d[1]<0)a.dir="up";else a.dir="down";
-        }else a.wanderTimer=30+Math.random()*60;
-      }
-    }
-    else if(a.state==="walking_to_egg"){
-      // Walk back to egg position
-      if(!a.moving){
-        if(a.x===a.eggX&&a.y===a.eggY){
-          a.state="egg";a.hatchTriggered=false; // back to dormant egg
-        }else{
-          const dx=Math.sign(a.eggX-a.x),dy=Math.sign(a.eggY-a.y);
-          let nx=a.x+dx,ny=a.y+dy;
-          if(!isBlocked(nx,ny)){a.targetX=nx;a.targetY=ny;a.moving=true;a.moveTimer=0;
-            if(dx<0)a.dir="left";else if(dx>0)a.dir="right";else if(dy<0)a.dir="up";else a.dir="down";
-          }else{
-            if(dx&&!isBlocked(a.x+dx,a.y)){a.targetX=a.x+dx;a.targetY=a.y;a.moving=true;a.moveTimer=0;a.dir=dx<0?"left":"right";}
-            else if(dy&&!isBlocked(a.x,a.y+dy)){a.targetX=a.x;a.targetY=a.y+dy;a.moving=true;a.moveTimer=0;a.dir=dy<0?"up":"down";}
-          }
-        }
-      }
-    }
-
-    // Movement interpolation (shared for all moving states)
-    if(a.moving){
-      const tx=a.targetX*TILE,ty=a.targetY*TILE,dx=tx-a.px,dy=ty-a.py;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<1.5){a.px=tx;a.py=ty;a.x=a.targetX;a.y=a.targetY;a.moving=false;a.frame=0;
-        if(a.state==="working")a.wanderTimer=90+Math.random()*150;
-      }else{a.px+=(dx/dist)*1.5;a.py+=(dy/dist)*1.5;a.moveTimer++;a.frame=Math.floor(a.moveTimer/10)%2;}
-    }
-  }
+  const gameCtx = {
+    player,
+    isBlocked,
+    TILE,
+    getZoneKeyAt,
+    scrollOpen,
+    textBoxOpen,
+    AGENT_FINDINGS,
+    AGENT_STATUS,
+    openTextBox,
+    fetchFindings: fetchAgentFindings,
+    fetchStatus:   fetchAgentStatus,
+  };
+  for(const a of agents) a.update(gameCtx);
 }
 
 // ═══════════════════════════════════════════
@@ -1013,29 +1066,105 @@ function drawTile(x,y){
   const sx=x*TS-camera.x,sy=y*TS-camera.y;
   if(sx+TS<0||sy+TS<0||sx>canvas.width||sy>canvas.height)return;
   const t=map[y][x];
-  if(t===0){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);}
-  else if(t===1){ctx.fillStyle=(x+y)%2===0?PATH1:PATH2;ctx.fillRect(sx,sy,TS,TS);}
-  else if(t===2){const w=Math.sin(gameTime*0.03+x*0.5+y*0.3)*0.5+0.5;ctx.fillStyle=w>0.5?WATER1:WATER2;ctx.fillRect(sx,sy,TS,TS);
-    if(Math.sin(gameTime*0.05+x*2+y*3)>0.9){ctx.fillStyle="rgba(255,255,255,0.4)";ctx.fillRect(sx+TS/3,sy+TS/4,TS/5,TS/5);}}
-  else if(t===3){const z=getZoneAt(x,y);if(z){ctx.fillStyle=z===ZONES[activePhase]?z.color+"20":z.color+"10";ctx.fillRect(sx,sy,TS,TS);}
-    else{ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);}}
+  const seed=(x*31+y*17)%100;
+  if(t===0){
+    // Rich grass with texture
+    ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#6ab058";for(let i=0;i<4;i++){const gx=sx+(seed+i*23)%TS,gy=sy+(seed+i*17)%TS;ctx.fillRect(gx,gy,2,4);}
+    ctx.fillStyle="#9cd080";ctx.fillRect(sx+(seed%30)+4,sy+(seed%20)+8,1,3);
+  }
+  else if(t===1){
+    // Textured path with pebbles
+    ctx.fillStyle=(x+y)%2===0?PATH1:PATH2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#b89848";for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(sx+8+(seed+i*15)%32,sy+8+(seed+i*11)%32,2,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle="#e8c888";ctx.fillRect(sx+(seed%20)+6,sy+(seed%24)+4,3,2);
+  }
+  else if(t===2){
+    // Animated water with ripples and sparkles
+    const w=Math.sin(gameTime*0.03+x*0.5+y*0.3)*0.5+0.5;ctx.fillStyle=w>0.5?WATER1:WATER2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#70b0e8";const ripple=Math.sin(gameTime*0.04+x+y)*4;ctx.fillRect(sx+10+ripple,sy+TS/2,TS/3,2);
+    ctx.fillStyle="#80c0f0";ctx.fillRect(sx+5,sy+10+Math.sin(gameTime*0.05+x*2)*3,TS/4,1);
+    if(Math.sin(gameTime*0.05+x*2+y*3)>0.85){ctx.fillStyle="rgba(255,255,255,0.6)";ctx.fillRect(sx+TS/3,sy+TS/4,4,4);ctx.fillRect(sx+TS/2+4,sy+TS/2,2,2);}
+  }
+  else if(t===3){
+    const z=getZoneAt(x,y);if(z){ctx.fillStyle=z===ZONES[activePhase]?z.color+"20":z.color+"10";ctx.fillRect(sx,sy,TS,TS);
+    // Subtle floor pattern
+    ctx.fillStyle=z.color+"08";for(let i=0;i<2;i++)ctx.fillRect(sx+i*24,sy+12,20,2);}
+    else{ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);}
+  }
   else if(t===4){const z=getZoneAt(x,y);if(z){ctx.fillStyle=z===ZONES[activePhase]?z.color+"45":z.color+"20";ctx.fillRect(sx,sy,TS,TS);
-    ctx.fillStyle=z===ZONES[activePhase]?z.color+"65":z.color+"35";ctx.fillRect(sx+2,sy+2,TS-4,TS-4);}}
-  else if(t===5){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle=z===ZONES[activePhase]?z.color+"65":z.color+"35";ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+    // Corner accents
+    ctx.fillStyle=z.color+"80";ctx.fillRect(sx,sy,4,4);ctx.fillRect(sx+TS-4,sy,4,4);ctx.fillRect(sx,sy+TS-4,4,4);ctx.fillRect(sx+TS-4,sy+TS-4,4,4);}}
+  else if(t===5){
+    // Multi-petal flowers with leaves
+    ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
     const fc=FLOWER_COLORS[(x*7+y*13)%FLOWER_COLORS.length];const bob=Math.sin(gameTime*0.02+x+y)*2;
-    ctx.fillStyle=fc;ctx.fillRect(sx+TS/2-4,sy+TS/3+bob,8,8);ctx.fillStyle="#4a7c3f";ctx.fillRect(sx+TS/2-1,sy+TS/3+8+bob,3,10);}
-  else if(t===6){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
-    ctx.fillStyle="#5a3a1e";ctx.fillRect(sx+TS/2-3,sy+TS/2,6,TS/2);
-    ctx.fillStyle="#2d6a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS/2-2);ctx.fillStyle="#3a8c2a";ctx.fillRect(sx+8,sy,TS-16,TS/3);}
-  else if(t===7){ctx.fillStyle=(x+y)%2===0?LAB_FL:LAB_FL2;ctx.fillRect(sx,sy,TS,TS);ctx.strokeStyle="#60708040";ctx.strokeRect(sx,sy,TS,TS);}
-  else if(t===8){ctx.fillStyle=LAB_EQ;ctx.fillRect(sx,sy,TS,TS);
-    // Vial/bubbling
-    ctx.fillStyle="#60d0a0";const bubY=Math.sin(gameTime*0.06+x)*3;ctx.fillRect(sx+TS/2-3,sy+TS/3+bubY,6,8);
-    ctx.fillStyle="#40b080";ctx.fillRect(sx+TS/2-1,sy+TS/4+bubY,3,4);}
-  else if(t===9){ctx.fillStyle=(x+y)%2===0?STORE_FL:STORE_FL2;ctx.fillRect(sx,sy,TS,TS);}
-  else if(t===10){ctx.fillStyle=STORE_SH;ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle=STORE_SH2;ctx.fillRect(sx+3,sy+4,TS-6,TS/3);
-    ctx.fillRect(sx+3,sy+TS/2+2,TS-6,TS/3);}
-  else if(t===11){ctx.fillStyle="#1a4a12";ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle="#2d5a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS-8);}
+    ctx.fillStyle="#40812E";ctx.fillRect(sx+TS/2-1,sy+TS/3+8+bob,3,12);
+    ctx.fillStyle="#5a9050";ctx.fillRect(sx+TS/2+2,sy+TS/2+bob,6,3);ctx.fillRect(sx+TS/2-7,sy+TS/2+4+bob,5,3);
+    ctx.fillStyle=fc;ctx.fillRect(sx+TS/2-6,sy+TS/3+bob,5,5);ctx.fillRect(sx+TS/2+2,sy+TS/3+bob,5,5);
+    ctx.fillRect(sx+TS/2-2,sy+TS/3-4+bob,5,5);ctx.fillRect(sx+TS/2-2,sy+TS/3+4+bob,5,5);
+    ctx.fillStyle="#fff060";ctx.fillRect(sx+TS/2-2,sy+TS/3+bob,4,4);
+  }
+  else if(t===6){
+    // Detailed tree with layered canopy
+    ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#634255";ctx.fillRect(sx+TS/2-4,sy+TS/2-2,8,TS/2+2);
+    ctx.fillStyle="#3a2010";ctx.fillRect(sx+TS/2-2,sy+TS/2,4,TS/2);
+    ctx.fillStyle="#1e5a16";ctx.beginPath();ctx.arc(sx+TS/2,sy+TS/3,TS/2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#2d7a22";ctx.beginPath();ctx.arc(sx+TS/2-6,sy+TS/3+4,TS/4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(sx+TS/2+8,sy+TS/3+2,TS/4.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#3a9c2e";ctx.beginPath();ctx.arc(sx+TS/2,sy+TS/4,TS/5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#4ab83a";ctx.fillRect(sx+TS/2-2+Math.sin(gameTime*0.03)*2,sy+TS/5,4,3);
+  }
+  else if(t===7){
+    // Lab floor with tiles and glow
+    ctx.fillStyle=(x+y)%2===0?LAB_FL:LAB_FL2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.strokeStyle="#607080";ctx.lineWidth=1;ctx.strokeRect(sx+1,sy+1,TS-2,TS-2);
+    ctx.fillStyle="#90a0b020";ctx.fillRect(sx+4,sy+4,TS/3,TS/3);
+  }
+  else if(t===8){
+    // Lab equipment with bubbling beakers
+    ctx.fillStyle=LAB_EQ;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#405060";ctx.fillRect(sx+2,sy+2,TS-4,TS-4);
+    const bubY=Math.sin(gameTime*0.06+x)*3;
+    ctx.fillStyle="#304050";ctx.fillRect(sx+TS/2-8,sy+TS/2,16,TS/2-4);
+    ctx.fillStyle="#50e0b0";ctx.fillRect(sx+TS/2-5,sy+TS/2+4+bubY,10,12);
+    ctx.fillStyle="#70ffcc";const bub=Math.sin(gameTime*0.1+x*3);ctx.beginPath();ctx.arc(sx+TS/2-2,sy+TS/2+8+bub*2,2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(sx+TS/2+2,sy+TS/2+12+bub*3,1.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#80a0c0";ctx.fillRect(sx+6,sy+8,8,6);ctx.fillStyle="#60d0a0";ctx.fillRect(sx+8,sy+10,4,3);
+  }
+  else if(t===9){
+    // Wood floor with grain
+    ctx.fillStyle=(x+y)%2===0?STORE_FL:STORE_FL2;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#a08050";ctx.fillRect(sx,sy+TS/3,TS,1);ctx.fillRect(sx,sy+2*TS/3,TS,1);
+    ctx.fillStyle="#d0b080";ctx.fillRect(sx+seed%20+4,sy+8,12,1);
+  }
+  else if(t===10){
+    // Store shelf with items
+    ctx.fillStyle=STORE_SH;ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle=STORE_SH2;ctx.fillRect(sx+2,sy+3,TS-4,TS/3);ctx.fillRect(sx+2,sy+TS/2+2,TS-4,TS/3);
+    ctx.fillStyle="#e06040";ctx.fillRect(sx+6,sy+6,6,8);ctx.fillStyle="#40a0e0";ctx.fillRect(sx+16,sy+5,8,9);
+    ctx.fillStyle="#f0d040";ctx.fillRect(sx+28,sy+7,6,6);
+    ctx.fillStyle="#a060c0";ctx.fillRect(sx+8,sy+TS/2+5,7,8);ctx.fillStyle="#60c080";ctx.fillRect(sx+20,sy+TS/2+4,10,9);
+  }
+  else if(t===11){
+    // Dense forest with depth
+    ctx.fillStyle="#0e3a0a";ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#1a4a12";ctx.beginPath();ctx.arc(sx+TS/3,sy+TS/2,TS/3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#2d5a1e";ctx.beginPath();ctx.arc(sx+2*TS/3,sy+TS/3,TS/3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#3a6a28";ctx.beginPath();ctx.arc(sx+TS/2,sy+TS/2,TS/4,0,Math.PI*2);ctx.fill();
+  }
+  else if(t===12){
+    // Spawn pad with enhanced effects
+    const p=Math.sin(gameTime*0.05+x*0.8+y*0.8)*0.5+0.5;
+    ctx.fillStyle=(x+y)%2===0?"#0d4a4a":"#0a3a3a";ctx.fillRect(sx,sy,TS,TS);
+    ctx.fillStyle="#0f5a5a";ctx.fillRect(sx+8,sy+8,TS-16,TS-16);
+    ctx.strokeStyle=`rgba(52,211,153,${0.3+p*0.5})`;ctx.lineWidth=2;ctx.strokeRect(sx+3,sy+3,TS-6,TS-6);
+    ctx.strokeStyle=`rgba(52,211,153,${0.15+p*0.3})`;ctx.lineWidth=1;ctx.strokeRect(sx+8,sy+8,TS-16,TS-16);
+    ctx.fillStyle=`rgba(52,211,153,${0.6+p*0.4})`;ctx.font="bold "+(TS/2)+"px monospace";ctx.textAlign="center";
+    ctx.fillText("+",sx+TS/2,sy+TS/2+TS/6);
+  }
 }
 
 function drawSprite(sc,px,py){const sx=px*SCALE-camera.x,sy=py*SCALE-camera.y;ctx.drawImage(sc,sx,sy,TS,TS);}
@@ -1046,13 +1175,137 @@ function drawAgentImage(img,px,py){
   ctx.drawImage(img,sx,sy,sz,sz);
 }
 
+function drawScrollBanner(ctx, x, y, w, h) {
+  const rollW = 10;
+  const paper = "#F5E6D3";
+  const paperDark = "#DCB5A3";
+  const outline = "#3d2a12";
+
+  // Main paper body
+  ctx.fillStyle = paper;
+  ctx.fillRect(x + rollW, y, w - rollW*2, h);
+
+  // Left roll
+  ctx.fillStyle = paperDark;
+  ctx.fillRect(x, y + 3, rollW, h - 6);
+  ctx.fillStyle = paper;
+  ctx.fillRect(x + 3, y + 5, rollW - 3, h - 10);
+
+  // Right roll
+  ctx.fillStyle = paperDark;
+  ctx.fillRect(x + w - rollW, y + 3, rollW, h - 6);
+  ctx.fillStyle = paper;
+  ctx.fillRect(x + w - rollW, y + 5, rollW - 3, h - 10);
+
+  // Outline
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + rollW, y, w - rollW*2, h);
+
+  // Dashed inner border
+  ctx.strokeStyle = "#c9a96e";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 2]);
+  ctx.strokeRect(x + rollW + 5, y + 4, w - rollW*2 - 10, h - 8);
+  ctx.setLineDash([]);
+}
+
 function drawZoneLabels(){
-  ctx.font="bold 14px monospace";ctx.textAlign="center";
+  ctx.textAlign="center";
   for(const[k,z]of Object.entries(ZONES)){
-    const sx=(z.x+z.w/2)*TS-camera.x,sy=z.y*TS-camera.y-8;
+    const sx=(z.x+z.w/2)*TS-camera.x,sy=z.y*TS-camera.y-12;
     if(sx<-200||sx>canvas.width+200||sy<-50||sy>canvas.height+50)continue;
-    ctx.fillStyle=k===activePhase?z.color:z.color+"80";
-    ctx.fillText(ZONE_NAMES[k].toUpperCase(),sx,sy);
+    const w = 160, h = 28;
+    drawScrollBanner(ctx, sx - w/2, sy - h/2, w, h);
+    ctx.fillStyle = "#40812E";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText(ZONE_NAMES[k].toUpperCase(), sx, sy + 4);
+  }
+}
+
+// AreaLabel class for OO rendering - Scroll style
+class AreaLabel {
+  constructor(config) {
+    this.id = config.id;
+    this.title = config.title;
+    this.subtitle = config.subtitle;
+    this.position = config.position;
+    this.titleColor = config.titleColor;
+    this.subtitleColor = config.subtitleColor;
+    this.width = 120;
+    this.height = 36;
+  }
+
+  isVisible(camera, canvas) {
+    const sx = this.position.x * TS - camera.x;
+    const sy = this.position.y * TS - camera.y;
+    return sx > -150 && sx < canvas.width + 150 && sy > -50 && sy < canvas.height + 50;
+  }
+
+  drawScroll(ctx, x, y, w, h) {
+    const rollW = 8;
+    // Scroll colors from palette
+    const paper = "#F5E6D3";
+    const paperDark = "#DCB5A3";
+    const outline = "#3d2a12";
+
+    // Main paper body
+    ctx.fillStyle = paper;
+    ctx.fillRect(x + rollW, y, w - rollW*2, h);
+
+    // Left roll
+    ctx.fillStyle = paperDark;
+    ctx.fillRect(x, y + 2, rollW, h - 4);
+    ctx.fillStyle = paper;
+    ctx.fillRect(x + 2, y + 4, rollW - 2, h - 8);
+
+    // Right roll
+    ctx.fillStyle = paperDark;
+    ctx.fillRect(x + w - rollW, y + 2, rollW, h - 4);
+    ctx.fillStyle = paper;
+    ctx.fillRect(x + w - rollW, y + 4, rollW - 2, h - 8);
+
+    // Outline
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + rollW, y, w - rollW*2, h);
+
+    // Dashed inner border
+    ctx.strokeStyle = "#c9a96e";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 2]);
+    ctx.strokeRect(x + rollW + 4, y + 4, w - rollW*2 - 8, h - 8);
+    ctx.setLineDash([]);
+  }
+
+  draw(ctx, camera) {
+    const sx = this.position.x * TS - camera.x;
+    const sy = this.position.y * TS - camera.y - 16;
+
+    // Draw scroll background
+    this.drawScroll(ctx, sx - this.width/2, sy - 14, this.width, this.height);
+
+    // Title (dark brown on parchment)
+    ctx.fillStyle = this.titleColor;
+    ctx.font = "bold 10px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(this.title, sx, sy + 2);
+
+    // Subtitle
+    ctx.fillStyle = this.subtitleColor;
+    ctx.font = "9px monospace";
+    ctx.fillText(this.subtitle, sx, sy + 14);
+  }
+}
+
+// Instantiate area labels from config
+const areaLabelInstances = AREA_LABELS.map(config => new AreaLabel(config));
+
+function drawAreaLabels() {
+  for (const label of areaLabelInstances) {
+    if (label.isVisible(camera, canvas)) {
+      label.draw(ctx, camera);
+    }
   }
 }
 
@@ -1062,42 +1315,63 @@ function drawThoughtBubbles(){
     const sx=a.px*SCALE-camera.x+TS/2,sy=a.py*SCALE-camera.y-8;
     if(sx<-100||sx>canvas.width+100||sy<-50||sy>canvas.height+50)continue;
     const isThinking=a.activeTask.status==="thinking";
-    const bubbleColor=isThinking?"#8b5cf6":"#fbbf24";
+    const bubbleColor=isThinking?"#63ACF0":"#D4B269";
     const floatY=Math.sin(gameTime*0.04+a.index*2)*3;
     ctx.fillStyle=bubbleColor+"60";
     ctx.beginPath();ctx.arc(sx-2,sy+floatY+4,2,0,Math.PI*2);ctx.fill();
     ctx.beginPath();ctx.arc(sx-6,sy+floatY-2,3,0,Math.PI*2);ctx.fill();
     const bw=120,bh=20,bx=sx-bw/2,by=sy-bh-6+floatY;
-    ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(bx,by,bw,bh,4);ctx.fill();
+    ctx.fillStyle="#f8f4ec";ctx.fillRect(bx,by,bw,bh);
+    ctx.strokeStyle="#1a1a1a";ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,bh);
     ctx.strokeStyle=bubbleColor+"60";ctx.lineWidth=1;ctx.stroke();
     ctx.fillStyle=bubbleColor;ctx.font="bold 8px monospace";ctx.textAlign="left";
     if(isThinking){ctx.fillText("◆"+".".repeat(1+Math.floor(gameTime/20)%3),bx+4,by+13);}
     else{const sc=["⟳","◐","◑","◒"];ctx.fillText(sc[Math.floor(gameTime/15)%4],bx+4,by+13);}
-    ctx.fillStyle="#cbd5e1";ctx.font="8px monospace";
+    ctx.fillStyle="#634255";ctx.font="8px monospace";
     let tn=a.activeTask.name;if(tn.length>14)tn=tn.substring(0,13)+"…";
     ctx.fillText(tn,bx+16,by+13);
   }
 }
 
 function drawInteractionPrompt(){
-  if(dialog.active)return;const idx=getAdjacentAgent();if(idx===-1)return;
-  const a=agents[idx];
-  const sx=a.px*SCALE-camera.x+TS/2,sy=a.py*SCALE-camera.y-(a.state==="working"?40:16);
-  const pulse=0.7+Math.sin(gameTime*0.08)*0.3;ctx.globalAlpha=pulse;
-  ctx.fillStyle="rgba(0,0,0,0.8)";ctx.beginPath();ctx.roundRect(sx-31,sy-22,62,22,4);ctx.fill();
-  ctx.fillStyle="#fbbf24";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("[SPACE]",sx,sy-6);
-  ctx.globalAlpha=1;
+  if(dialog.active)return;
+  // Agent interaction prompt
+  const idx=getAdjacentAgent();
+  if(idx!==-1){
+    const a=agents[idx];
+    const sx=a.px*SCALE-camera.x+TS/2,sy=a.py*SCALE-camera.y-(a.state==="working"?40:16);
+    const pulse=0.7+Math.sin(gameTime*0.08)*0.3;ctx.globalAlpha=pulse;
+    ctx.fillStyle="#f8f4ec";ctx.fillRect(sx-31,sy-22,62,22);
+    ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(sx-31,sy-22,62,22);
+    ctx.fillStyle="#40812E";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("[SPACE]",sx,sy-6);
+    ctx.globalAlpha=1;
+  }
+  // Spawn pad interaction prompt
+  if(isAdjacentToSpawnPad()){
+    const sx=25.5*TS-camera.x,sy=13*TS-camera.y-24;
+    const pulse=0.7+Math.sin(gameTime*0.1)*0.3;ctx.globalAlpha=pulse;
+    ctx.fillStyle="#f8f4ec";ctx.fillRect(sx-48,sy-22,96,22);
+    ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(sx-48,sy-22,96,22);
+    ctx.fillStyle="#75C4A4";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText("[SPACE] SPAWN",sx,sy-6);
+    ctx.globalAlpha=1;
+  }
 }
 
 function drawDialog(){
   if(!dialog.active)return;
-  const boxH=130,boxY=canvas.height-boxH-16,boxX=30,boxW=canvas.width-60;
-  ctx.fillStyle="rgba(10,15,30,0.94)";ctx.beginPath();ctx.roundRect(boxX,boxY,boxW,boxH,8);ctx.fill();
+  const boxH=136,boxY=canvas.height-boxH-16,boxX=30,boxW=canvas.width-60;
+  // Poke box: white fill, thick black border, inner line
+  ctx.fillStyle="#f8f4ec";ctx.fillRect(boxX,boxY,boxW,boxH);
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=4;ctx.strokeRect(boxX,boxY,boxW,boxH);
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(boxX+6,boxY+6,boxW-12,boxH-12);
+  // Corner pokeball circles
+  const cR=6,corners=[[boxX,boxY],[boxX+boxW,boxY],[boxX,boxY+boxH],[boxX+boxW,boxY+boxH]];
+  for(const[cx,cy]of corners){ctx.fillStyle="#DB3E55";ctx.beginPath();ctx.arc(cx,cy,cR,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.stroke();}
   const a=agents[dialog.agentIndex];
-  ctx.strokeStyle=a?a.color+"80":"#60a5fa";ctx.lineWidth=2;ctx.stroke();
   if(dialog.agentIndex>=0){
     const ag=agents[dialog.agentIndex],ps=56,px=boxX+14,py=boxY+(boxH-ps)/2;
-    ctx.fillStyle="#0f172a";ctx.fillRect(px,py,ps,ps);
+    ctx.fillStyle="#e8dfc8";ctx.fillRect(px,py,ps,ps);
+    ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(px,py,ps,ps);
     if(ag.state==="egg"){ctx.drawImage(eggSprite,px+4,py+4,48,48);}
     else if(agentImages[ag.name]){ctx.drawImage(agentImages[ag.name],px+4,py+4,48,48);}
     else{ctx.drawImage(agentPixelSprites[dialog.agentIndex].frame1,px+4,py+4,48,48);}
@@ -1105,43 +1379,55 @@ function drawDialog(){
   }
   const textX=boxX+84,textY=boxY+28,maxWidth=boxW-100;
   if(dialog.phase==="question"){
-    ctx.fillStyle="#e2e8f0";ctx.font="12px monospace";ctx.textAlign="left";
-    ctx.fillText("View full task list?",textX,boxY+28);
-    const opts=["Yes, show details","No thanks"];
-    for(let i=0;i<opts.length;i++){const sel=dialog.selectedOption===i;ctx.fillStyle=sel?"#fbbf24":"#64748b";ctx.font=(sel?"bold ":"")+"12px monospace";ctx.fillText((sel?"> ":"  ")+opts[i],textX+8,boxY+50+i*20);}
+    ctx.fillStyle="#1a1a1a";ctx.font="12px monospace";ctx.textAlign="left";
+    if(spawnDialog.active){
+      // Spawn pad: show available agent list
+      ctx.fillStyle="#1a1a1a";ctx.fillText(dialog.text,textX,boxY+28);
+      const opts=spawnDialog.options;
+      for(let i=0;i<opts.length;i++){const sel=spawnDialog.selectedOption===i;ctx.fillStyle=sel?"#40812E":"#87888E";ctx.font=(sel?"bold ":"")+"12px monospace";ctx.fillText((sel?"> ":"  ")+opts[i],textX+8,boxY+50+i*20);}
+      ctx.fillStyle="#87888E";ctx.font="9px monospace";ctx.fillText("↑↓ select  SPACE confirm",textX+8,boxY+boxH-10);
+    } else {
+      // Normal agent dialog: view task list?
+      ctx.fillStyle="#1a1a1a";ctx.fillText("View full task list?",textX,boxY+28);
+      const opts=["Yes, show details","No thanks"];
+      for(let i=0;i<opts.length;i++){const sel=dialog.selectedOption===i;ctx.fillStyle=sel?"#40812E":"#87888E";ctx.font=(sel?"bold ":"")+"12px monospace";ctx.fillText((sel?"> ":"  ")+opts[i],textX+8,boxY+50+i*20);}
+    }
   } else {
     if(dialog.phase==="typing"){dialog.charTimer++;if(dialog.charTimer>=1){dialog.charTimer=0;dialog.displayedChars=Math.min(dialog.displayedChars+1,dialog.text.length);if(dialog.displayedChars>=dialog.text.length)dialog.phase="done";}}
-    ctx.fillStyle="#e2e8f0";ctx.font="12px monospace";ctx.textAlign="left";
+    ctx.fillStyle="#1a1a1a";ctx.font="12px monospace";ctx.textAlign="left";
     const words=dialog.text.substring(0,dialog.displayedChars).split(' ');let line='',lineY=textY;
     for(const word of words){const test=line+word+' ';if(ctx.measureText(test).width>maxWidth&&line.length>0){ctx.fillText(line,textX,lineY);line=word+' ';lineY+=16;}else line=test;}
     ctx.fillText(line,textX,lineY);
-    if(dialog.phase==="done"){ctx.fillStyle="#64748b";ctx.font="10px monospace";ctx.fillText("▼ SPACE",textX,boxY+boxH-12);}
+    if(dialog.phase==="done"){ctx.fillStyle="#9D7375";ctx.font="10px monospace";ctx.fillText("▼ SPACE",textX,boxY+boxH-12);}
   }
 }
 
 // HUD
 function drawMinimap(){
   const mmW=130,mmH=90,mmX=canvas.width-mmW-12,mmY=12,sx=mmW/COLS,sy=mmH/ROWS;
-  ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(mmX-4,mmY-4,mmW+8,mmH+8,6);ctx.fill();
+  ctx.fillStyle="#634255";ctx.beginPath();ctx.roundRect(mmX-4,mmY-4,mmW+8,mmH+8,2);ctx.fill();
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(mmX-4,mmY-4,mmW+8,mmH+8);
   for(const[k,z]of Object.entries(ZONES)){ctx.fillStyle=z.color+(k===activePhase?"50":"25");ctx.fillRect(mmX+z.x*sx,mmY+z.y*sy,z.w*sx,z.h*sy);}
   for(const a of agents){ctx.fillStyle=a.state==="egg"?"#f5f0e0":a.color;ctx.fillRect(mmX+a.x*sx-1,mmY+a.y*sy-1,3,3);}
-  ctx.fillStyle="#fbbf24";ctx.fillRect(mmX+player.x*sx-2,mmY+player.y*sy-2,4,4);
+  ctx.fillStyle="#DB3E55";ctx.fillRect(mmX+player.x*sx-2,mmY+player.y*sy-2,4,4);
 }
 
 function drawAgentRoster(){
   const rX=12;let rY=12;const rH=agents.length*28+22;
-  ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(rX-2,rY-2,170,rH+4,6);ctx.fill();
-  ctx.fillStyle="#475569";ctx.font="8px monospace";ctx.textAlign="left";ctx.fillText("TEAM",rX+8,rY+10);rY+=18;
+  ctx.fillStyle="#634255";ctx.beginPath();ctx.roundRect(rX-2,rY-2,170,rH+4,2);ctx.fill();
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.strokeRect(rX-2,rY-2,170,rH+4);
+  ctx.fillStyle="#D4B269";ctx.font="bold 8px monospace";ctx.textAlign="left";ctx.fillText("▶ TEAM",rX+8,rY+10);rY+=18;
   for(const a of agents){
     ctx.fillStyle=a.color+"30";ctx.fillRect(rX+2,rY-2,164,24);
-    const stateColors={egg:"#64748b",hatching:"#fbbf24",walking_to_work:"#fbbf24",working:"#22c55e",walking_to_egg:"#f59e0b"};
+    const stateColors={egg:"#9D7375",hatching:"#D4B269",walking_to_work:"#D4B269",working:"#7FC761",walking_to_egg:"#f59e0b"};
     if(agentImages[a.name]){ctx.drawImage(agentImages[a.name],rX+4,rY-2,18,18);}
     else{ctx.fillStyle=a.color;ctx.beginPath();ctx.arc(rX+14,rY+8,5,0,Math.PI*2);ctx.fill();}
-    ctx.fillStyle=stateColors[a.state]||"#64748b";ctx.beginPath();ctx.arc(rX+22,rY+14,2.5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#cbd5e1";ctx.font="10px monospace";ctx.fillText(a.name,rX+24,rY+8);
-    ctx.fillStyle="#475569";ctx.font="7px monospace";
+    ctx.fillStyle=stateColors[a.state]||"#87888E";ctx.beginPath();ctx.arc(rX+22,rY+14,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#f8f4ec";ctx.font="bold 10px monospace";ctx.fillText(a.name,rX+24,rY+8);
+    ctx.fillStyle="#DCB5A3";ctx.font="7px monospace";
     const stateLabels={egg:"💤 dormant",hatching:"🥚 hatching...",walking_to_work:"🚶 heading to work",working:"⚡ working",walking_to_egg:"🔙 returning"};
-    ctx.fillText(stateLabels[a.state]||a.state,rX+24,rY+18);
+    const rosterLabel=(a.state==="egg"&&a.sleepState==="resting")?"✓ done & resting":stateLabels[a.state]||a.state;
+    ctx.fillText(rosterLabel,rX+24,rY+18);
     rY+=28;
   }
 }
@@ -1150,14 +1436,16 @@ function drawZonePopup(){
   if(zoneNameTimer<=0)return;ctx.globalAlpha=Math.min(1,zoneNameTimer/30);
   const px=canvas.width/2,py=55;ctx.font="bold 18px monospace";ctx.textAlign="center";
   const mw=ctx.measureText(currentZoneName).width;
-  ctx.fillStyle="rgba(10,15,30,0.85)";ctx.beginPath();ctx.roundRect(px-mw/2-16,py-16,mw+32,34,6);ctx.fill();
-  ctx.fillStyle=ZONES[activePhase]?ZONES[activePhase].color:"#fff";ctx.fillText(currentZoneName,px,py+6);ctx.globalAlpha=1;
+  ctx.fillStyle="#f8f4ec";ctx.fillRect(px-mw/2-14,py-16,mw+28,32);
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=3;ctx.strokeRect(px-mw/2-14,py-16,mw+28,32);
+  ctx.fillStyle=ZONES[activePhase]?ZONES[activePhase].darkColor:"#1a1a1a";ctx.fillText(currentZoneName,px,py+6);ctx.globalAlpha=1;
 }
 
 function drawControlsHint(){
-  ctx.fillStyle="rgba(10,15,30,0.75)";ctx.beginPath();ctx.roundRect(10,canvas.height-32,420,22,4);ctx.fill();
-  ctx.fillStyle="#475569";ctx.font="10px monospace";ctx.textAlign="left";
-  ctx.fillText("WASD/Arrows: Move  |  SPACE: Talk  |  ESC: Close",18,canvas.height-17);
+  ctx.fillStyle="#634255";ctx.fillRect(0,canvas.height-28,canvas.width,28);
+  ctx.strokeStyle="#1a1a1a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,canvas.height-28);ctx.lineTo(canvas.width,canvas.height-28);ctx.stroke();
+  ctx.fillStyle="#DCB5A3";ctx.font="10px monospace";ctx.textAlign="left";
+  ctx.fillText("WASD/Arrows: Move  |  SPACE: Talk  |  ESC: Close",12,canvas.height-10);
 }
 
 // ═══════════════════════════════════════════
@@ -1166,11 +1454,12 @@ function drawControlsHint(){
 function update(){gameTime++;updatePlayer();updateAgents();updateCamera();updateZoneDetection();}
 
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#0f172a";ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#634255";ctx.fillRect(0,0,canvas.width,canvas.height);
   const sc=Math.max(0,Math.floor(camera.x/TS)),ec=Math.min(COLS,Math.ceil((camera.x+canvas.width)/TS)+1);
   const sr=Math.max(0,Math.floor(camera.y/TS)),er=Math.min(ROWS,Math.ceil((camera.y+canvas.height)/TS)+1);
   for(let y=sr;y<er;y++)for(let x=sc;x<ec;x++)drawTile(x,y);
   drawZoneLabels();
+  drawAreaLabels();
 
   // Depth-sorted characters + eggs
   const chars=[{type:"player",py:player.py,px:player.px,frame:player.frame}];
@@ -1191,17 +1480,27 @@ function draw(){
     }
     else if(c.type==="egg"){
       drawSprite(eggSprite,c.px,c.py);
-      // Gentle bob
+      // Gentle bob + zzz
       const sx=c.px*SCALE-camera.x+TS/2,sy=c.py*SCALE-camera.y-4;
-      ctx.fillStyle="#475569";ctx.font="7px monospace";ctx.textAlign="center";
+      ctx.fillStyle="#87888E";ctx.font="7px monospace";ctx.textAlign="center";
       ctx.fillText("💤",sx,sy+Math.sin(gameTime*0.02+c.index)*2);
+      // DONE badge — shown when agent has completed ≥1 task and is resting
+      const ag=agents[c.index];
+      if(ag.sleepState==="resting"){
+        const bx=c.px*SCALE-camera.x+TS-4, by=c.py*SCALE-camera.y+2;
+        const bw=36,bh=13;
+        ctx.fillStyle=ag.color;ctx.fillRect(bx-bw,by,bw,bh);
+        ctx.strokeStyle="#1a1a1a";ctx.lineWidth=1;ctx.strokeRect(bx-bw,by,bw,bh);
+        ctx.fillStyle="#1a1a1a";ctx.font="bold 8px monospace";ctx.textAlign="center";
+        ctx.fillText("✓ DONE",bx-bw/2,by+9);
+      }
     }
     else if(c.type==="egg-crack"){
       drawSprite(eggCrackedSprite,c.px,c.py);
       // Shake effect
       const shake=Math.sin(gameTime*0.5)*2;
       const sx=c.px*SCALE-camera.x+TS/2+shake,sy=c.py*SCALE-camera.y-10;
-      ctx.fillStyle="#fbbf24";ctx.font="9px monospace";ctx.textAlign="center";ctx.fillText("✨",sx,sy);
+      ctx.fillStyle="#D4B269";ctx.font="9px monospace";ctx.textAlign="center";ctx.fillText("✨",sx,sy);
     }
     else if(c.type==="agent"){
       const aName=agents[c.index].name;
