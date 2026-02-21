@@ -4,167 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solopreneur - AI Org World</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+:root { --pxfont: 'Press Start 2P', monospace; }
+
+/* ╔══════════════════════════════════════════════╗
+   ║              GLOBAL STYLES                   ║
+   ╚══════════════════════════════════════════════╝ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f172a; overflow: hidden; font-family: monospace; }
+body { background: #000000; overflow: hidden; font-family: monospace; }
 canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
-#detail-panel {
-  position: fixed; top: 0; right: 0; width: 420px; max-width: 92vw; height: 100vh;
-  background: #0f172a; border-left: 2px solid #334155; z-index: 100;
-  transform: translateX(100%); transition: transform 0.25s ease;
-  display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.6);
-}
-#detail-panel.open { transform: translateX(0); }
-#detail-scrim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; display: none; }
-#detail-scrim.open { display: block; }
-.dp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #1e293b; }
-.dp-header h2 { color: #e2e8f0; font-size: 1rem; margin: 0; font-family: monospace; }
-.dp-badge { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; margin-right: 10px; font-weight: 700; font-family: monospace; }
-.dp-close { background: none; border: none; color: #64748b; font-size: 1.4rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.dp-close:hover { background: #1e293b; color: #e2e8f0; }
-.dp-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 0.8rem; line-height: 1.6; color: #94a3b8; font-family: monospace; }
-.dp-section { margin-bottom: 16px; }
-.dp-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1e293b; }
-.dp-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
-.dp-info-label { color: #475569; font-size: 0.7rem; }
-.dp-info-value { color: #e2e8f0; font-size: 0.75rem; }
-.dp-tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 2px 0; }
-.dp-tag-skill { background: rgba(139,92,246,0.15); color: #a78bfa; }
-.dp-tag-mcp { background: rgba(16,185,129,0.12); color: #6ee7b7; }
-.task-item { padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; background: #1e293b; border-left: 3px solid #475569; }
-.task-item.running { border-left-color: #fbbf24; }
-.task-item.thinking { border-left-color: #8b5cf6; }
-.task-item.done { border-left-color: #22c55e; opacity: 0.6; }
-.task-status { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-.task-status.running { color: #fbbf24; }
-.task-status.thinking { color: #8b5cf6; }
-.task-status.done { color: #22c55e; }
-.task-name { color: #e2e8f0; font-size: 0.75rem; margin-bottom: 2px; }
-.task-detail { color: #64748b; font-size: 0.65rem; }
-.task-progress { height: 3px; background: #1e293b; border-radius: 2px; margin-top: 5px; overflow: hidden; }
-.task-progress-bar { height: 100%; border-radius: 2px; }
+/* Onboarding + Title Card styles → onboarding.js */
 
-/* ═══ Onboarding Overlay ═══ */
-#onboarding-overlay {
-  position: fixed; inset: 0; background: rgba(10,15,30,0.96);
-  z-index: 500; display: flex; align-items: center; justify-content: center;
-  font-family: monospace;
-}
-#onboarding-box {
-  width: 520px; max-width: 92vw;
-  border: 3px solid #334155;
-  box-shadow: 0 0 0 1px #1e293b, 0 0 60px rgba(34,197,94,0.15);
-}
-#onboarding-header {
-  background: #0f172a; border-bottom: 2px solid #22c55e;
-  padding: 20px 28px 16px;
-}
-#onboarding-header .ob-label {
-  font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
-  color: #22c55e; margin-bottom: 8px;
-}
-#onboarding-header h1 {
-  font-size: 1.4rem; color: #e2e8f0; letter-spacing: 2px; margin: 0;
-  text-transform: uppercase;
-}
-#onboarding-header p {
-  font-size: 0.75rem; color: #64748b; margin: 6px 0 0; letter-spacing: 1px;
-}
-#onboarding-body {
-  background: #0a0f1e; padding: 28px;
-}
-#onboarding-body label {
-  display: block; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
-  color: #475569; margin-bottom: 10px;
-}
-#onboarding-input {
-  width: 100%; padding: 12px 14px; font-family: monospace; font-size: 0.9rem;
-  background: #1e293b; border: 2px solid #334155; color: #e2e8f0;
-  outline: none; box-sizing: border-box;
-}
-#onboarding-input:focus { border-color: #22c55e; }
-#onboarding-input::placeholder { color: #334155; }
-#onboarding-submit {
-  margin-top: 16px; width: 100%; padding: 12px; font-family: monospace;
-  font-size: 0.85rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;
-  background: linear-gradient(180deg,#22c55e 0%,#16a34a 50%,#15803d 100%);
-  color: #052e16; border: 3px solid #1a1a1a; cursor: pointer;
-  box-shadow: 0 4px 0 #1a1a1a; transition: transform 0.05s, box-shadow 0.05s;
-}
-#onboarding-submit:hover { background: linear-gradient(180deg,#4ade80 0%,#22c55e 50%,#16a34a 100%); }
-#onboarding-submit:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a1a1a; }
-.ob-agents {
-  display: flex; gap: 8px; margin-top: 20px; padding-top: 16px;
-  border-top: 1px solid #1e293b;
-}
-.ob-agent-chip {
-  flex: 1; padding: 6px 4px; text-align: center;
-  background: #1e293b; border: 1px solid #334155;
-  font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase;
-}
-
-/* ═══ Title Card ═══ */
-#title-card {
-  position: fixed; inset: 0; background: #0a0f1e;
-  z-index: 400; display: none; align-items: center; justify-content: center;
-  font-family: monospace; transition: all 0.4s ease;
-}
-#title-card.show { display: flex; }
-#title-card.as-header {
-  inset: unset; top: 0; left: 0; right: 0; height: 44px;
-  background: rgba(10,15,30,0.95); border-bottom: 1px solid #1e293b;
-  align-items: center; justify-content: flex-start;
-  padding: 0 16px; display: flex;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
-}
-#title-card-inner { text-align: center; padding: 40px; max-width: 600px; transition: all 0.4s ease; }
-#title-card.as-header #title-card-inner {
-  display: flex; align-items: center; gap: 16px; padding: 0; text-align: left;
-}
-#title-card-loading {
-  color: #334155; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;
-}
-#title-card-content { display: none; }
-#title-card-content.show { display: block; }
-#title-card.as-header #title-card-content { display: flex; align-items: center; gap: 14px; }
-.tc-label {
-  font-size: 0.6rem; letter-spacing: 4px; text-transform: uppercase;
-  color: #22c55e; margin-bottom: 24px;
-}
-#title-card.as-header .tc-label { display: none; }
-#tc-title {
-  font-size: clamp(2.4rem, 7vw, 4rem); font-weight: bold; letter-spacing: 4px;
-  text-transform: uppercase; color: #f1f5f9;
-  text-shadow: 0 0 40px rgba(34,197,94,0.4), 0 0 80px rgba(34,197,94,0.15);
-  margin-bottom: 16px; line-height: 1.1; transition: all 0.4s ease;
-}
-#title-card.as-header #tc-title {
-  font-size: 0.95rem; letter-spacing: 3px; margin-bottom: 0;
-  text-shadow: none; color: #22c55e;
-}
-#tc-tagline {
-  font-size: 0.9rem; color: #64748b; letter-spacing: 2px; margin-bottom: 40px;
-  transition: all 0.4s ease;
-}
-#title-card.as-header #tc-tagline {
-  font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 0; color: #334155;
-  border-left: 1px solid #1e293b; padding-left: 14px;
-}
-#tc-begin {
-  font-family: monospace; font-size: 0.8rem; font-weight: bold;
-  letter-spacing: 3px; text-transform: uppercase;
-  padding: 12px 36px; border: 2px solid #22c55e; background: transparent;
-  color: #22c55e; cursor: pointer; transition: all 0.15s;
-}
-#tc-begin:hover { background: #22c55e; color: #052e16; }
-#title-card.as-header #tc-begin { display: none; }
-.tc-scanline {
-  position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
-}
-#title-card.as-header .tc-scanline { display: none; }
-
-/* ═══ Scroll Overlay ═══ */
+/* ╔══════════════════════════════════════════════╗
+   ║  SCROLL OVERLAY — Agent findings report      ║
+   ║  Parchment-style popup with findings         ║
+   ╚══════════════════════════════════════════════╝ */
 #scroll-scrim { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; }
 #scroll-scrim.open { display:flex; align-items:center; justify-content:center; }
 #scroll-wrap {
@@ -230,30 +85,75 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 <body>
 <canvas id="game"></canvas>
 
-<!-- Onboarding overlay -->
+<!-- ╔══════════════════════════════════════════════╗
+     ║  LANDING PAGE — "website-builder"            ║
+     ║  User enters what they want to build,        ║
+     ║  sees agent roster, clicks "Assemble"        ║
+     ╚══════════════════════════════════════════════╝ -->
 <div id="onboarding-overlay">
+  <div class="px-cloud px-cloud-1"></div>
+  <div class="px-cloud px-cloud-2"></div>
+  <div class="px-cloud px-cloud-3"></div>
+  <div class="px-cloud px-cloud-4"></div>
+  <div class="px-cloud px-cloud-5"></div>
+  <div class="px-cloud px-cloud-6"></div>
+  <div class="px-cloud px-cloud-7"></div>
+  <div class="px-cloud px-cloud-8"></div>
+  <div class="px-cloud px-cloud-9"></div>
+  <div class="px-cloud px-cloud-10"></div>
+  <div class="px-cloud px-cloud-11"></div>
   <div id="onboarding-box">
+ <div class="pokeball">
+      <div class="pokeball-top"></div>
+      <div class="pokeball-mid"></div>
+      <div class="pokeball-bot"></div>
+      <div class="pokeball-btn"></div>
+      <div class="pokeball-shine"></div>
+    </div>
     <div id="onboarding-header">
-      <div class="ob-label">&#9632; System Boot Complete</div>
-      <h1>Welcome to your<br>Building Hub</h1>
-      <p>Your AI team is standing by.</p>
+      <h1>Welcome to <br>Agent-mon</h1>
+      <p>Gotta catch 'em all!</p>
     </div>
     <div id="onboarding-body">
+      <div class="ob-char-label">Choose your character</div>
+      <div class="ob-char-picker">
+        <div class="ob-char-option selected" data-ceo="ceo_female.png" onclick="selectCeo(this)">
+          <img src="agent-images/ceo_female.png" alt="Female CEO">
+          <span>Female</span>
+        </div>
+        <div class="ob-char-option" data-ceo="ceo_male.png" onclick="selectCeo(this)">
+          <img src="agent-images/ceo_male.png" alt="Male CEO">
+          <span>Male</span>
+        </div>
+      </div>
       <label for="onboarding-input">What do you want to build today?</label>
-      <input id="onboarding-input" type="text" placeholder="e.g. a tool that helps indie devs ship faster..." autocomplete="off" />
+      <input id="onboarding-input" type="text" placeholder="e.g. website to showcase my artwork..." autocomplete="off" />
       <button id="onboarding-submit">&#9654; Assemble My Team</button>
+      <div class="ob-team-title">Your Team</div>
       <div class="ob-agents">
-        <div class="ob-agent-chip" style="color:#22c55e">&#9632; BizOps</div>
-        <div class="ob-agent-chip" style="color:#8b5cf6">&#9632; Researcher</div>
-        <div class="ob-agent-chip" style="color:#ec4899">&#9632; Designer</div>
-        <div class="ob-agent-chip" style="color:#3b82f6">&#9632; Engineer</div>
+        <div class="ob-agent-chip" style="color:#7FC761"><img src="agent-images/biz_op.png" alt="BizOps">BizOps</div>
+        <div class="ob-agent-chip" style="color:#9D7375"><img src="agent-images/researcher.png" alt="Researcher">Researcher</div>
+        <div class="ob-agent-chip" style="color:#DB3E55"><img src="agent-images/designer.png" alt="Designer">Designer</div>
+        <div class="ob-agent-chip" style="color:#63ACF0"><img src="agent-images/engineer.png" alt="Engineer">Engineer</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Title card -->
+<!-- ╔══════════════════════════════════════════════╗
+     ║  NAME PAGE — "name-page"                     ║
+     ║  Shows AI-generated product name + tagline.  ║
+     ║  Collapses into top header bar in-game.      ║
+     ╚══════════════════════════════════════════════╝ -->
 <div id="title-card">
+  <div class="px-cloud px-cloud-1"></div>
+  <div class="px-cloud px-cloud-2"></div>
+  <div class="px-cloud px-cloud-3"></div>
+  <div class="px-cloud px-cloud-4"></div>
+  <div class="px-cloud px-cloud-5"></div>
+  <div class="px-cloud px-cloud-6"></div>
+  <div class="px-cloud px-cloud-7"></div>
+  <div class="px-cloud px-cloud-8"></div>
   <div class="tc-scanline"></div>
   <div id="title-card-inner">
     <div id="title-card-loading">&#9632; Naming your product<span id="tc-dots"></span></div>
@@ -266,7 +166,9 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   </div>
 </div>
 
-<!-- Scroll overlay for agent findings -->
+<!-- ╔══════════════════════════════════════════════╗
+     ║  SCROLL OVERLAY — Agent findings report      ║
+     ╚══════════════════════════════════════════════╝ -->
 <div id="scroll-scrim">
   <div id="scroll-wrap">
     <div class="scroll-spindle"></div>
@@ -280,13 +182,20 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   </div>
 </div>
 
+<!-- ╔══════════════════════════════════════════════╗
+     ║  DETAIL PANEL — Agent info slide-out         ║
+     ╚══════════════════════════════════════════════╝ -->
 <div id="detail-scrim"></div>
 <div id="detail-panel">
-  <div class="dp-header">
-    <div style="display:flex;align-items:center"><span class="dp-badge" id="dp-badge"></span><h2 id="dp-title"></h2></div>
-    <button class="dp-close" id="dp-close">&times;</button>
+  <div class="dp-spindle"></div>
+  <div class="dp-scroll-inner">
+    <div class="dp-header">
+      <div style="display:flex;align-items:center"><span class="dp-badge" id="dp-badge"></span><h2 id="dp-title"></h2></div>
+      <button class="dp-close" id="dp-close">X</button>
+    </div>
+    <div class="dp-body" id="dp-body"></div>
   </div>
-  <div class="dp-body" id="dp-body"></div>
+  <div class="dp-spindle"></div>
 </div>
 <script>
 // ═══════════════════════════════════════════
@@ -379,13 +288,13 @@ async function fetchAgentStatus(agentName) {
 
 const AGENTS = [
   { name:"BizOps", model:"opus", skills:["discover"], mcps:[], desc:"Market analysis & strategy",
-    zone:"discover", color:"#22c55e", darkColor:"#14532d", workRole:"store" },
+    zone:"discover", color:"#7FC761", darkColor:"#40812E", workRole:"store" },
   { name:"Researcher", model:"sonnet", skills:["discover"], mcps:["Context7"], desc:"Competitive analysis & trends",
-    zone:"discover", color:"#8b5cf6", darkColor:"#3b0764", workRole:"lab" },
+    zone:"discover", color:"#9D7375", darkColor:"#634255", workRole:"lab" },
   { name:"Designer", model:"opus", skills:["design"], mcps:["Chrome DevTools"], desc:"UI/UX & wireframes",
-    zone:"design", color:"#ec4899", darkColor:"#831843", workRole:"studio" },
+    zone:"design", color:"#DB3E55", darkColor:"#9D3040", workRole:"studio" },
   { name:"Engineer", model:"opus", skills:["build"], mcps:["GitHub"], desc:"Architecture & implementation",
-    zone:"build", color:"#3b82f6", darkColor:"#1e3a5f", workRole:"desk" },
+    zone:"build", color:"#63ACF0", darkColor:"#3A6A9A", workRole:"desk" },
 ];
 
 const ZONE_NAMES = { discover:"Discovery Zone", design:"Design Zone", build:"Build Zone" };
@@ -407,9 +316,9 @@ window.addEventListener('resize', resize); resize();
 // ZONES — Discover is large & nature-themed
 // ═══════════════════════════════════════════
 const ZONES = {
-  discover: { x:2, y:2, w:22, h:18, color:"#22c55e", darkColor:"#166534" },
-  design:   { x:28, y:2, w:14, h:12, color:"#ec4899", darkColor:"#9d174d" },
-  build:    { x:28, y:18, w:14, h:12, color:"#3b82f6", darkColor:"#1e40af" },
+  discover: { x:2, y:2, w:22, h:18, color:"#7FC761", darkColor:"#40812E" },
+  design:   { x:28, y:2, w:14, h:12, color:"#DB3E55", darkColor:"#9D3040" },
+  build:    { x:28, y:18, w:14, h:12, color:"#63ACF0", darkColor:"#3A6A9A" },
 };
 
 // Workstation positions (tile coords) & egg positions within discover
@@ -542,11 +451,11 @@ function isBlocked(tx,ty){
 // ═══════════════════════════════════════════
 // TILE COLORS
 // ═══════════════════════════════════════════
-const GRASS1="#88c070",GRASS2="#78b060",PATH1="#d8b068",PATH2="#c8a058";
-const WATER1="#5090d0",WATER2="#60a0e0";
-const FLOWER_COLORS=["#ff6b6b","#ffd93d","#6bcb77","#4d96ff"];
-const LAB_FL="#8090a0",LAB_FL2="#708090",LAB_EQ="#506070";
-const STORE_FL="#c8a870",STORE_FL2="#b89860",STORE_SH="#6b4226",STORE_SH2="#8b5a3e";
+const GRASS1="#7FC761",GRASS2="#6AB550",PATH1="#D4B269",PATH2="#C4A259";
+const WATER1="#5098D8",WATER2="#63ACF0";
+const FLOWER_COLORS=["#DB3E55","#D4B269","#75C4A4","#63ACF0"];
+const LAB_FL="#87888E",LAB_FL2="#777880",LAB_EQ="#634255";
+const STORE_FL="#DCB5A3",STORE_FL2="#CCA593",STORE_SH="#6b4226",STORE_SH2="#8b5a3e";
 
 function getZoneAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return z;return null;}
 function getZoneKeyAt(tx,ty){for(const[k,z]of Object.entries(ZONES))if(tx>=z.x&&tx<z.x+z.w&&ty>=z.y&&ty<z.y+z.h)return k;return"";}
@@ -581,8 +490,8 @@ function addProps(base,overlays){const s=base.map(r=>[...r]);for(const[y,x,c]of 
 // Agent props
 const HAT_Y="#fbbf24",HAT_Yd="#d4a017";
 const BER="#4a4a5a",BERd="#333340",PB_H="#8B6914",PB_T="#3bbef0";
-const TIE="#22c55e",TIEd="#16a34a";
-const GC="#1e293b",GCt="#fbbf24";
+const TIE="#7FC761",TIEd="#16a34a";
+const GC="#2A1F3D",GCt="#fbbf24";
 
 const AGENT_PROPS=[
   // BizOps — green tie
@@ -675,7 +584,8 @@ const eggSprite=spriteToCanvas(makeEggSprite());
 const eggCrackedSprite=spriteToCanvas(makeEggCracked());
 
 // Load actual agent PNGs — keyed by agent name
-const AGENT_IMG_FILES={"BizOps":"agent-images/biz_op.png","Researcher":"agent-images/researcher.png","Designer":"agent-images/designer.png","Engineer":"agent-images/engineer.png","CEO":"agent-images/ceo.png"};
+let selectedCeoImg="agent-images/ceo_female.png";
+const AGENT_IMG_FILES={"BizOps":"agent-images/biz_op.png","Researcher":"agent-images/researcher.png","Designer":"agent-images/designer.png","Engineer":"agent-images/engineer.png","CEO":selectedCeoImg};
 const agentImages={};
 let imagesLoaded=0,imagesToLoad=Object.keys(AGENT_IMG_FILES).length;
 for(const[name,src]of Object.entries(AGENT_IMG_FILES)){
@@ -769,38 +679,6 @@ function tryInteract(){
   dialog.active=true;dialog.text=liveStatus||"Crunching, getting information...";
   dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
 }
-
-// ═══════════════════════════════════════════
-// DETAIL PANEL
-// ═══════════════════════════════════════════
-function openDetailPanel(idx){
-  const a=agents[idx];
-  document.getElementById('dp-badge').textContent=a.model.toUpperCase();
-  document.getElementById('dp-badge').style.cssText=`background:${a.color}25;color:${a.color};font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;border-radius:4px;margin-right:10px;font-weight:700;font-family:monospace`;
-  document.getElementById('dp-title').textContent=a.name;
-  let h='<div class="dp-section"><div class="dp-section-title">Agent Info</div>';
-  h+=`<div class="dp-info-row"><span class="dp-info-label">Role</span><span class="dp-info-value">${a.desc}</span></div>`;
-  h+=`<div class="dp-info-row"><span class="dp-info-label">Zone</span><span class="dp-info-value">${ZONE_NAMES[a.zone]}</span></div>`;
-  h+=`<div class="dp-info-row"><span class="dp-info-label">State</span><span class="dp-info-value">${a.state}</span></div>`;
-  h+='<div style="margin-top:6px">';a.skills.forEach(s=>{h+=`<span class="dp-tag dp-tag-skill">/${s}</span>`;});
-  a.mcps.forEach(m=>{h+=`<span class="dp-tag dp-tag-mcp">${m}</span>`;});h+='</div></div>';
-  h+='<div class="dp-section"><div class="dp-section-title">Tasks</div>';
-  a.tasks.forEach(t=>{
-    const icons={running:"⟳",thinking:"◆",done:"✓"};
-    const colors={running:"#fbbf24",thinking:"#8b5cf6",done:"#22c55e"};
-    h+=`<div class="task-item ${t.status}"><div class="task-status ${t.status}">${icons[t.status]||"○"} ${t.status}</div>`;
-    h+=`<div class="task-name">${t.name}</div><div class="task-detail">${t.detail}</div>`;
-    if(t.status!=="done")h+=`<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${colors[t.status]}"></div></div>`;
-    h+='</div>';
-  });
-  h+='</div>';
-  document.getElementById('dp-body').innerHTML=h;
-  document.getElementById('detail-panel').classList.add('open');
-  document.getElementById('detail-scrim').classList.add('open');
-}
-function closeDetailPanel(){document.getElementById('detail-panel').classList.remove('open');document.getElementById('detail-scrim').classList.remove('open');}
-document.getElementById('dp-close').addEventListener('click',closeDetailPanel);
-document.getElementById('detail-scrim').addEventListener('click',closeDetailPanel);
 
 // ═══════════════════════════════════════════
 // SCROLL — Agent findings report
@@ -1026,7 +904,7 @@ function drawTile(x,y){
     ctx.fillStyle=fc;ctx.fillRect(sx+TS/2-4,sy+TS/3+bob,8,8);ctx.fillStyle="#4a7c3f";ctx.fillRect(sx+TS/2-1,sy+TS/3+8+bob,3,10);}
   else if(t===6){ctx.fillStyle=(x+y)%2===0?GRASS1:GRASS2;ctx.fillRect(sx,sy,TS,TS);
     ctx.fillStyle="#5a3a1e";ctx.fillRect(sx+TS/2-3,sy+TS/2,6,TS/2);
-    ctx.fillStyle="#2d6a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS/2-2);ctx.fillStyle="#3a8c2a";ctx.fillRect(sx+8,sy,TS-16,TS/3);}
+    ctx.fillStyle="#40812E";ctx.fillRect(sx+4,sy+4,TS-8,TS/2-2);ctx.fillStyle="#5A9A3E";ctx.fillRect(sx+8,sy,TS-16,TS/3);}
   else if(t===7){ctx.fillStyle=(x+y)%2===0?LAB_FL:LAB_FL2;ctx.fillRect(sx,sy,TS,TS);ctx.strokeStyle="#60708040";ctx.strokeRect(sx,sy,TS,TS);}
   else if(t===8){ctx.fillStyle=LAB_EQ;ctx.fillRect(sx,sy,TS,TS);
     // Vial/bubbling
@@ -1035,7 +913,7 @@ function drawTile(x,y){
   else if(t===9){ctx.fillStyle=(x+y)%2===0?STORE_FL:STORE_FL2;ctx.fillRect(sx,sy,TS,TS);}
   else if(t===10){ctx.fillStyle=STORE_SH;ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle=STORE_SH2;ctx.fillRect(sx+3,sy+4,TS-6,TS/3);
     ctx.fillRect(sx+3,sy+TS/2+2,TS-6,TS/3);}
-  else if(t===11){ctx.fillStyle="#1a4a12";ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle="#2d5a1e";ctx.fillRect(sx+4,sy+4,TS-8,TS-8);}
+  else if(t===11){ctx.fillStyle="#2A5A1E";ctx.fillRect(sx,sy,TS,TS);ctx.fillStyle="#40812E";ctx.fillRect(sx+4,sy+4,TS-8,TS-8);}
 }
 
 function drawSprite(sc,px,py){const sx=px*SCALE-camera.x,sy=py*SCALE-camera.y;ctx.drawImage(sc,sx,sy,TS,TS);}
@@ -1097,7 +975,7 @@ function drawDialog(){
   ctx.strokeStyle=a?a.color+"80":"#60a5fa";ctx.lineWidth=2;ctx.stroke();
   if(dialog.agentIndex>=0){
     const ag=agents[dialog.agentIndex],ps=56,px=boxX+14,py=boxY+(boxH-ps)/2;
-    ctx.fillStyle="#0f172a";ctx.fillRect(px,py,ps,ps);
+    ctx.fillStyle="#000000";ctx.fillRect(px,py,ps,ps);
     if(ag.state==="egg"){ctx.drawImage(eggSprite,px+4,py+4,48,48);}
     else if(agentImages[ag.name]){ctx.drawImage(agentImages[ag.name],px+4,py+4,48,48);}
     else{ctx.drawImage(agentPixelSprites[dialog.agentIndex].frame1,px+4,py+4,48,48);}
@@ -1129,12 +1007,12 @@ function drawMinimap(){
 }
 
 function drawAgentRoster(){
-  const rX=12;let rY=12;const rH=agents.length*28+22;
+  const rX=12;let rY=56;const rH=agents.length*28+22;
   ctx.fillStyle="rgba(10,15,30,0.88)";ctx.beginPath();ctx.roundRect(rX-2,rY-2,170,rH+4,6);ctx.fill();
   ctx.fillStyle="#475569";ctx.font="8px monospace";ctx.textAlign="left";ctx.fillText("TEAM",rX+8,rY+10);rY+=18;
   for(const a of agents){
     ctx.fillStyle=a.color+"30";ctx.fillRect(rX+2,rY-2,164,24);
-    const stateColors={egg:"#64748b",hatching:"#fbbf24",walking_to_work:"#fbbf24",working:"#22c55e",walking_to_egg:"#f59e0b"};
+    const stateColors={egg:"#64748b",hatching:"#fbbf24",walking_to_work:"#fbbf24",working:"#7FC761",walking_to_egg:"#f59e0b"};
     if(agentImages[a.name]){ctx.drawImage(agentImages[a.name],rX+4,rY-2,18,18);}
     else{ctx.fillStyle=a.color;ctx.beginPath();ctx.arc(rX+14,rY+8,5,0,Math.PI*2);ctx.fill();}
     ctx.fillStyle=stateColors[a.state]||"#64748b";ctx.beginPath();ctx.arc(rX+22,rY+14,2.5,0,Math.PI*2);ctx.fill();
@@ -1166,7 +1044,7 @@ function drawControlsHint(){
 function update(){gameTime++;updatePlayer();updateAgents();updateCamera();updateZoneDetection();}
 
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#0f172a";ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#140F20";ctx.fillRect(0,0,canvas.width,canvas.height);
   const sc=Math.max(0,Math.floor(camera.x/TS)),ec=Math.min(COLS,Math.ceil((camera.x+canvas.width)/TS)+1);
   const sr=Math.max(0,Math.floor(camera.y/TS)),er=Math.min(ROWS,Math.ceil((camera.y+canvas.height)/TS)+1);
   for(let y=sr;y<er;y++)for(let x=sc;x<ec;x++)drawTile(x,y);
@@ -1216,57 +1094,8 @@ function draw(){
 function gameLoop(){update();draw();requestAnimationFrame(gameLoop);}
 camera.x=player.px*SCALE-canvas.width/2;camera.y=player.py*SCALE-canvas.height/2;
 
-// Onboarding → Title Card → Game
-const titleCard=document.getElementById('title-card');
-const titleCardContent=document.getElementById('title-card-content');
-const titleCardLoading=document.getElementById('title-card-loading');
-let tcDotsTimer=null;
-
-function startGame(){
-  onboardingOpen=false;
-  titleCard.classList.remove('show');
-  titleCard.classList.add('as-header');
-  gameLoop();
-}
-
-document.getElementById('tc-begin').addEventListener('click',startGame);
-
-async function showTitleCard(context){
-  document.getElementById('onboarding-overlay').style.display='none';
-  titleCard.classList.add('show');
-
-  // Animate loading dots
-  let dots=0;
-  tcDotsTimer=setInterval(()=>{dots=(dots+1)%4;document.getElementById('tc-dots').textContent='.'.repeat(dots);},400);
-
-  try {
-    const resp=await fetch('/api/title',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context})});
-    const data=resp.ok?await resp.json():{title:'Your Product',tagline:'Built with your AI team.'};
-    clearInterval(tcDotsTimer);
-    document.getElementById('tc-title').textContent=data.title;
-    document.getElementById('tc-tagline').textContent=data.tagline;
-  } catch {
-    clearInterval(tcDotsTimer);
-    document.getElementById('tc-title').textContent='Your Product';
-    document.getElementById('tc-tagline').textContent='Built with your AI team.';
-  }
-
-  titleCardLoading.style.display='none';
-  titleCardContent.classList.add('show');
-}
-
-function handleOnboardingSubmit(){
-  const val=document.getElementById('onboarding-input').value.trim();
-  if(!val)return;
-  productContext=val;
-  showTitleCard(val);
-}
-
-document.getElementById('onboarding-submit').addEventListener('click',handleOnboardingSubmit);
-document.getElementById('onboarding-input').addEventListener('keydown',e=>{
-  if(e.key==='Enter')handleOnboardingSubmit();
-});
-document.getElementById('onboarding-input').focus();
 </script>
+<script src="onboarding.js"></script>
+<script src="detail-panel.js"></script>
 </body>
 </html>

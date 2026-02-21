@@ -1,5 +1,3 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/game-org-chart.html" }
-  ]
+  "framework": "nextjs"
 }
