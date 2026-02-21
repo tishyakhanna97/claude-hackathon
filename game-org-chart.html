@@ -317,52 +317,145 @@ function getZoneKeyAt(tx, ty) {
 }
 
 // ═══════════════════════════════════════════
-// SPRITES
+// SPRITES — Claude bot base + profession props
 // ═══════════════════════════════════════════
-function createCharSprite(mainColor, darkColor, skinColor) {
-  const _ = null, M = mainColor, D = darkColor, S = skinColor || "#ffd5b0", H = darkColor, E = "#1a1a2e", W = "#ffffff";
+const _ = null;
+const CB = "#C4856B"; // Claude body terracotta
+const Cd = "#A8705A"; // Claude darker shade
+const EY = "#2a2a2a"; // Eyes
+
+// Base Claude bot — frame 1 (standing)
+function claudeBase1() {
   return [
-    [_,_,_,_,_,H,H,H,H,H,H,_,_,_,_,_],
-    [_,_,_,_,H,H,H,H,H,H,H,H,_,_,_,_],
-    [_,_,_,H,H,H,H,H,H,H,H,H,H,_,_,_],
-    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
-    [_,_,_,M,M,M,M,M,M,M,M,M,_,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
-    [_,_,M,D,M,M,M,M,M,M,M,D,M,_,_,_],
-    [_,_,_,D,M,M,M,M,M,M,M,D,_,_,_,_],
-    [_,_,_,_,D,D,D,_,D,D,D,_,_,_,_,_],
-    [_,_,_,_,D,D,D,_,D,D,D,_,_,_,_,_],
-    [_,_,_,D,D,D,D,_,D,D,D,D,_,_,_,_],
+    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,_,_,_,_,_,_,CB,CB,CB,CB,_],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   ];
 }
-function createCharSpriteWalk(mainColor, darkColor, skinColor) {
-  const _ = null, M = mainColor, D = darkColor, S = skinColor || "#ffd5b0", H = darkColor, E = "#1a1a2e", W = "#ffffff";
+
+// Base Claude bot — frame 2 (walking, legs splayed)
+function claudeBase2() {
   return [
-    [_,_,_,_,_,H,H,H,H,H,H,_,_,_,_,_],
-    [_,_,_,_,H,H,H,H,H,H,H,H,_,_,_,_],
-    [_,_,_,H,H,H,H,H,H,H,H,H,H,_,_,_],
-    [_,_,_,H,S,S,S,S,S,S,S,S,H,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,S,S,E,S,S,S,E,S,S,S,_,_,_],
-    [_,_,_,S,S,S,S,S,S,S,S,S,S,_,_,_],
-    [_,_,_,_,S,S,S,W,S,S,S,_,_,_,_,_],
-    [_,_,_,M,M,M,M,M,M,M,M,M,_,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
-    [_,_,M,M,M,M,M,M,M,M,M,M,M,_,_,_],
-    [_,_,M,D,M,M,M,M,M,M,M,D,M,_,_,_],
-    [_,_,_,D,M,M,M,M,M,M,M,D,_,_,_,_],
-    [_,_,_,D,D,D,_,_,_,D,D,D,_,_,_,_],
-    [_,_,D,D,D,_,_,_,_,_,D,D,D,_,_,_],
-    [_,_,D,D,D,_,_,_,_,_,D,D,D,_,_,_],
+    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+    [_,_,CB,CB,_,_,_,_,_,_,_,_,CB,CB,_,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,EY,CB,CB,CB,CB,EY,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,EY,CB,CB,CB,CB,CB,CB,EY,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,CB,_],
+    [_,CB,CB,CB,_,_,_,_,_,_,_,_,CB,CB,CB,_],
+    [CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],
+    [CB,CB,CB,_,_,_,_,_,_,_,_,_,_,CB,CB,CB],
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   ];
 }
+
+// Deep-copy a sprite and overlay prop pixels
+function addProps(base, overlays) {
+  const s = base.map(row => [...row]);
+  for (const [y, x, color] of overlays) {
+    if (y >= 0 && y < 16 && x >= 0 && x < 16) s[y][x] = color;
+  }
+  return s;
+}
+
+// ---- ENGINEER: Yellow hard hat ----
+const HAT_Y = "#fbbf24", HAT_Yd = "#d4a017";
+const engineerProps = [
+  // Hard hat brim + dome
+  [0,1,HAT_Y],[0,2,HAT_Y],[0,3,HAT_Y],[0,4,HAT_Y],[0,5,HAT_Y],[0,6,HAT_Y],[0,7,HAT_Y],[0,8,HAT_Y],[0,9,HAT_Y],[0,10,HAT_Y],[0,11,HAT_Y],[0,12,HAT_Y],[0,13,HAT_Y],[0,14,HAT_Y],
+  [1,2,HAT_Y],[1,3,HAT_Y],[1,4,HAT_Y],[1,5,HAT_Y],[1,6,HAT_Y],[1,7,HAT_Y],[1,8,HAT_Y],[1,9,HAT_Y],[1,10,HAT_Y],[1,11,HAT_Y],[1,12,HAT_Y],[1,13,HAT_Y],
+  // Hat band
+  [1,4,HAT_Yd],[1,5,HAT_Yd],[1,6,HAT_Yd],[1,7,HAT_Yd],[1,8,HAT_Yd],[1,9,HAT_Yd],[1,10,HAT_Yd],[1,11,HAT_Yd],
+];
+
+// ---- DESIGNER: Dark beret + paintbrush ----
+const BER = "#4a4a5a", BERd = "#333340";
+const PB_H = "#8B6914", PB_T = "#3bbef0", PB_Td = "#2a9bc7";
+const designerProps = [
+  // Beret (tilted left)
+  [0,1,BER],[0,2,BER],[0,3,BER],[0,4,BER],[0,5,BER],[0,6,BER],[0,7,BER],[0,8,BER],[0,9,BER],[0,10,BER],[0,11,BER],
+  [1,2,BER],[1,3,BER],[1,4,BER],[1,5,BER],[1,6,BER],[1,7,BER],[1,8,BER],[1,9,BER],[1,10,BER],[1,11,BER],[1,12,BER],[1,13,BER],
+  // Beret nub
+  [0,0,BERd],
+  // Paintbrush (held right side)
+  [8,15,PB_H],[9,15,PB_H],[10,15,PB_T],[11,15,PB_T],[12,15,PB_Td],
+];
+
+// ---- BIZOPS: Green tie ----
+const TIE = "#22c55e", TIEd = "#16a34a";
+const bizopsProps = [
+  // Tie knot + body
+  [8,7,TIE],[8,8,TIE],
+  [9,7,TIE],[9,8,TIE],
+  [10,7,TIEd],[10,8,TIEd],
+  [11,7,TIE],
+];
+
+// ---- QA: Detective/magnifying glass + cap ----
+const DET = "#6b4226", DETd = "#4a2e1a";
+const MG = "#94a3b8", MGl = "#cbd5e1";
+const qaProps = [
+  // Flat detective cap
+  [0,1,DET],[0,2,DET],[0,3,DET],[0,4,DET],[0,5,DET],[0,6,DET],[0,7,DET],[0,8,DET],[0,9,DET],[0,10,DET],[0,11,DET],[0,12,DET],[0,13,DET],[0,14,DET],
+  [1,2,DETd],[1,3,DETd],[1,4,DETd],[1,5,DETd],[1,6,DETd],[1,7,DETd],[1,8,DETd],[1,9,DETd],[1,10,DETd],[1,11,DETd],[1,12,DETd],[1,13,DETd],
+  // Magnifying glass (right side)
+  [9,15,MG],[10,15,MG],[10,14,_],[9,14,_],
+  [7,15,MGl],[8,15,MGl],[7,14,_],[6,15,MGl],[6,14,_],
+];
+
+// ---- RESEARCHER: Graduation cap ----
+const GC = "#1e293b", GCt = "#fbbf24";
+const researcherProps = [
+  // Mortarboard top
+  [0,0,GC],[0,1,GC],[0,2,GC],[0,3,GC],[0,4,GC],[0,5,GC],[0,6,GC],[0,7,GC],[0,8,GC],[0,9,GC],[0,10,GC],[0,11,GC],[0,12,GC],[0,13,GC],[0,14,GC],[0,15,GC],
+  [1,2,GC],[1,3,GC],[1,4,GC],[1,5,GC],[1,6,GC],[1,7,GC],[1,8,GC],[1,9,GC],[1,10,GC],[1,11,GC],[1,12,GC],[1,13,GC],
+  // Tassel
+  [1,14,GCt],[2,15,GCt],[3,15,GCt],
+];
+
+// ---- CONTENT STRATEGIST: Pencil behind ear + notebook ----
+const PEN = "#fbbf24", PENe = "#ec4899", PENt = "#2a2a2a";
+const NB = "#e2e8f0", NBd = "#94a3b8";
+const contentProps = [
+  // Pencil (sticking up from left ear)
+  [0,0,PENt],[0,1,PEN],
+  // Notebook held (left side)
+  [8,0,NB],[9,0,NB],[10,0,NB],[11,0,NB],
+  [8,1,NBd],[9,1,NBd],[10,1,NBd],[11,1,NBd],
+];
+
+// Build all agent sprites
+const AGENT_SPRITE_DATA = [
+  { props: engineerProps },       // Engineer
+  { props: designerProps },       // Designer
+  { props: bizopsProps },         // BizOps
+  { props: qaProps },             // QA
+  { props: researcherProps },     // Researcher
+  { props: contentProps },        // Content Strategist
+];
+
+// CEO sprite (Pokemon trainer - red cap, blue outfit)
 const CEO_SPRITE_1 = (() => {
-  const _ = null, R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
+  const R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
         S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
   return [
     [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
@@ -384,7 +477,7 @@ const CEO_SPRITE_1 = (() => {
   ];
 })();
 const CEO_SPRITE_2 = (() => {
-  const _ = null, R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
+  const R = "#e53e3e", Rd = "#c53030", B = "#3182ce", Bd = "#2c5282",
         S = "#ffd5b0", E = "#1a1a2e", W = "#ffffff", H = "#4a3728";
   return [
     [_,_,_,_,R,R,R,R,R,R,R,R,_,_,_,_],
@@ -416,9 +509,10 @@ function spriteToCanvas(spriteData) {
   return c;
 }
 
-const agentSprites = AGENTS.map(a => ({
-  frame1: spriteToCanvas(createCharSprite(a.color, a.darkColor, "#ffd5b0")),
-  frame2: spriteToCanvas(createCharSpriteWalk(a.color, a.darkColor, "#ffd5b0")),
+// Build agent sprite caches — Claude bots with props
+const agentSprites = AGENT_SPRITE_DATA.map(sd => ({
+  frame1: spriteToCanvas(addProps(claudeBase1(), sd.props)),
+  frame2: spriteToCanvas(addProps(claudeBase2(), sd.props)),
 }));
 const ceoSprites = {
   frame1: spriteToCanvas(CEO_SPRITE_1),
