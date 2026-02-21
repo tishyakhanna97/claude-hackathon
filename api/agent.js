@@ -1,6 +1,21 @@
 const Anthropic = require("@anthropic-ai/sdk").default;
+const { createClient } = require("redis");
 
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+async function getRedis() {
+  const redis = createClient({
+    username: "default",
+    password: process.env.REDIS_PW,
+    socket: {
+      host: "redis-17397.c278.us-east-1-4.ec2.cloud.redislabs.com",
+      port: 17397,
+    },
+  });
+  redis.on("error", (err) => console.log("Redis Client Error", err));
+  await redis.connect();
+  return redis;
+}
 
 const AGENT_PROMPTS = {
   BizOps: `You are BizOps, a market analyst AI agent for a solopreneur. The CEO just asked you to analyze the market for their specific product idea. Always name the product or describe it specifically in your findings — never give generic advice. Provide a concise market analysis with exactly 4 findings. Each finding should have a short label and 1-2 sentence insight. Focus on: competitor pricing, market size (TAM/SAM), go-to-market strategy, and key risks. Keep it punchy and actionable. Respond in JSON array format: [{"label":"...","text":"..."},...]`,
@@ -35,7 +50,17 @@ module.exports = async (req, res) => {
         system: systemPrompt,
         messages: [{ role: "user", content: userMsg }],
       });
-      res.status(200).json({ message: message.content[0].text.trim() });
+      const statusText = message.content[0].text.trim();
+      const redis = await getRedis();
+      await redis.lPush("prompt_logs", JSON.stringify({
+        ts: new Date().toISOString(),
+        agent,
+        type: "status",
+        input: userMsg,
+        output: statusText,
+      }));
+      await redis.quit();
+      res.status(200).json({ message: statusText });
       return;
     }
 
@@ -61,6 +86,15 @@ module.exports = async (req, res) => {
       findings = [{ label: "Analysis", text }];
     }
 
+    const redis = await getRedis();
+    await redis.lPush("prompt_logs", JSON.stringify({
+      ts: new Date().toISOString(),
+      agent,
+      type: "analysis",
+      input: userMsg,
+      output: text,
+    }));
+    await redis.quit();
     res.status(200).json({ agent, findings });
   } catch (err) {
     console.error("API error:", err.message);
