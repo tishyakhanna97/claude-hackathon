@@ -65,60 +65,7 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 .poke-btn-grey  { background-color: var(--granite); color: var(--pk-white); }
 .poke-btn-mint  { background-color: var(--mint); }
 
-/* ═══ Detail Panel ═══ */
-#detail-panel {
-  position: fixed; top: 0; right: 0; width: 420px; max-width: 92vw; height: 100vh;
-  background: var(--mauve-d); border-left: 4px solid var(--pk-black); z-index: 100;
-  transform: translateX(100%); transition: transform 0.25s ease;
-  display: flex; flex-direction: column;
-  box-shadow: -6px 0 0 0 var(--pk-black);
-}
-#detail-panel.open { transform: translateX(0); }
-#detail-scrim { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(60,30,40,0.55); z-index: 99; display: none; }
-#detail-scrim.open { display: block; }
-.dp-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border-bottom: 3px solid var(--pk-black);
-  background: var(--mauve);
-}
-.dp-header h2 { color: var(--pk-white); font-size: 1rem; margin: 0; font-family: monospace; }
-.dp-badge {
-  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;
-  padding: 3px 8px; border: 2px solid var(--pk-black);
-  margin-right: 10px; font-weight: 700; font-family: monospace; background: var(--pk-white);
-}
-.dp-close {
-  background: var(--amaranth); border: 2px solid var(--pk-black);
-  color: var(--pk-white); font-size: 1.1rem; cursor: pointer;
-  padding: 2px 8px; font-weight: bold;
-  box-shadow: 2px 2px 0 var(--pk-black);
-}
-.dp-close:active { transform: translate(2px,2px); box-shadow: none; }
-.dp-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 0.8rem; line-height: 1.6; color: var(--sand); font-family: monospace; }
-.dp-section { margin-bottom: 16px; }
-.dp-section-title {
-  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
-  color: var(--fawn); margin-bottom: 8px; padding-bottom: 4px;
-  border-bottom: 2px solid var(--mauve);
-}
-.dp-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
-.dp-info-label { color: var(--granite); font-size: 0.7rem; }
-.dp-info-value { color: var(--pk-white); font-size: 0.75rem; }
-.dp-tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border: 1px solid var(--pk-black); margin: 2px 2px 2px 0; }
-.dp-tag-skill { background: var(--mauve); color: var(--pk-white); }
-.dp-tag-mcp   { background: var(--mint);  color: var(--pk-black); }
-.task-item { padding: 8px 10px; margin-bottom: 6px; background: var(--mauve); border-left: 4px solid var(--granite); border: 1px solid var(--pk-black); }
-.task-item.running  { border-left: 4px solid var(--fawn); }
-.task-item.thinking { border-left: 4px solid var(--sky); }
-.task-item.done     { border-left: 4px solid var(--moss); opacity: 0.65; }
-.task-status { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-.task-status.running  { color: var(--fawn); }
-.task-status.thinking { color: var(--sky); }
-.task-status.done     { color: var(--moss); }
-.task-name { color: var(--pk-white); font-size: 0.75rem; margin-bottom: 2px; }
-.task-detail { color: var(--granite); font-size: 0.65rem; }
-.task-progress { height: 4px; background: var(--mauve-d); border: 1px solid var(--pk-black); margin-top: 5px; overflow: hidden; }
-.task-progress-bar { height: 100%; }
+/* Detail Panel — see detail-panel.js */
 
 /* ═══ Onboarding Overlay ═══ */
 #onboarding-overlay {
@@ -396,6 +343,7 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 </div>
 
 <script src="/agents.js"></script>
+<script src="/detail-panel.js"></script>
 <div id="detail-scrim"></div>
 <div id="detail-panel">
   <div class="dp-header">
@@ -897,37 +845,7 @@ function tryInteract(){
   dialog.displayedChars=0;dialog.charTimer=0;dialog.agentIndex=idx;dialog.phase="typing";dialog.selectedOption=0;
 }
 
-// ═══════════════════════════════════════════
-// DETAIL PANEL
-// ═══════════════════════════════════════════
-function openDetailPanel(idx){
-  const a=agents[idx];
-  document.getElementById('dp-badge').textContent=a.model.toUpperCase();
-  document.getElementById('dp-badge').style.cssText=`background:${a.color}25;color:${a.color};font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;border-radius:4px;margin-right:10px;font-weight:700;font-family:monospace`;
-  document.getElementById('dp-title').textContent=a.name;
-  let h='<div class="dp-section"><div class="dp-section-title">Agent Info</div>';
-  h+=`<div class="dp-info-row"><span class="dp-info-label">Role</span><span class="dp-info-value">${a.desc}</span></div>`;
-  h+=`<div class="dp-info-row"><span class="dp-info-label">Zone</span><span class="dp-info-value">${ZONE_NAMES[a.zone]}</span></div>`;
-  h+=`<div class="dp-info-row"><span class="dp-info-label">State</span><span class="dp-info-value">${a.state}</span></div>`;
-  h+='<div style="margin-top:6px">';a.skills.forEach(s=>{h+=`<span class="dp-tag dp-tag-skill">/${s}</span>`;});
-  a.mcps.forEach(m=>{h+=`<span class="dp-tag dp-tag-mcp">${m}</span>`;});h+='</div></div>';
-  h+='<div class="dp-section"><div class="dp-section-title">Tasks</div>';
-  a.tasks.forEach(t=>{
-    const icons={running:"⟳",thinking:"◆",done:"✓"};
-    const colors={running:"#D4B269",thinking:"#634255",done:"#7FC761"};
-    h+=`<div class="task-item ${t.status}"><div class="task-status ${t.status}">${icons[t.status]||"○"} ${t.status}</div>`;
-    h+=`<div class="task-name">${t.name}</div><div class="task-detail">${t.detail}</div>`;
-    if(t.status!=="done")h+=`<div class="task-progress"><div class="task-progress-bar" style="width:${t.progress}%;background:${colors[t.status]}"></div></div>`;
-    h+='</div>';
-  });
-  h+='</div>';
-  document.getElementById('dp-body').innerHTML=h;
-  document.getElementById('detail-panel').classList.add('open');
-  document.getElementById('detail-scrim').classList.add('open');
-}
-function closeDetailPanel(){document.getElementById('detail-panel').classList.remove('open');document.getElementById('detail-scrim').classList.remove('open');}
-document.getElementById('dp-close').addEventListener('click',closeDetailPanel);
-document.getElementById('detail-scrim').addEventListener('click',closeDetailPanel);
+// Detail panel — see detail-panel.js
 
 // ═══════════════════════════════════════════
 // SCROLL — Agent findings report
