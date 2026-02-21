@@ -10,3 +10,5 @@ scripts/gamma-prompt.md
 
 # OS files
 .DS_Store
+
+node_modules/*
