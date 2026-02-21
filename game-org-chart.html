@@ -255,8 +255,20 @@ const DEMO_FINDINGS = {
     {label:"Trend",text:"Agent-based architectures growing 3x YoY. Multi-agent frameworks gaining traction but lack polish."},
     {label:"Opportunity",text:"'Game-ified AI dashboard' is a completely unoccupied niche."},
   ]},
+  "Designer": { title:"Design Direction Brief", findings:[
+    {label:"Core Flow",text:"Onboarding → product input → agent dashboard is the critical path. Keep it under 3 steps to first insight."},
+    {label:"First Screens",text:"Prioritize the onboarding prompt and the agent findings scroll — these are the two moments that make or break the experience."},
+    {label:"Visual Tone",text:"Pixel-retro meets dark SaaS. High contrast, monospace type, and animated sprites signal 'this is different from every other AI tool'."},
+    {label:"UX Risk",text:"The game world can confuse non-gamers. Add a short tooltip layer on first load to orient new users quickly."},
+  ]},
+  "Engineer": { title:"Technical Architecture Plan", findings:[
+    {label:"Tech Stack",text:"Next.js or plain HTML + Vercel serverless functions for the backend. No database needed for MVP — stateless API calls only."},
+    {label:"Data Model",text:"Product context string → agent name → findings array. Store in-memory on client; no persistence required until v2."},
+    {label:"MVP Slice",text:"Ship the onboarding input + one working agent (BizOps) end-to-end before adding Designer and Engineer flows."},
+    {label:"Tech Risk",text:"Anthropic API latency can hit 5-10s. Add a loading state to the scroll so users know the agent is 'thinking', not broken."},
+  ]},
 };
-const AGENT_TITLES = { "BizOps":"Market Analysis Report", "Researcher":"Competitive Intelligence Brief" };
+const AGENT_TITLES = { "BizOps":"Market Analysis Report", "Researcher":"Competitive Intelligence Brief", "Designer":"Design Direction Brief", "Engineer":"Technical Architecture Plan" };
 
 // Fire real API call when agent starts working
 async function fetchAgentFindings(agentName) {
